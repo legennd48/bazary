@@ -1,12 +1,43 @@
 # Testing requirements
 -r base.txt
 
-# Additional testing tools
+# Testing framework
 pytest>=7.4.0
 pytest-django>=4.5.2
 pytest-cov>=4.1.0
 pytest-xdist>=3.3.0
 pytest-mock>=3.11.0
+pytest-html>=4.1.1
+pytest-json-report>=1.5.0
+
+# Test data factories
 factory-boy>=3.3.0
 faker>=19.6.0
+
+# Test utilities
+responses>=0.24.0
+freezegun>=1.2.2
+parameterized>=0.9.0
+
+# Coverage reporting
 coverage>=7.3.0
+
+# Performance testing
+locust>=2.17.0
+
+# Code quality and linting
+black>=23.9.0
+isort>=5.12.0
+flake8>=6.1.0
+mypy>=1.5.0
+django-stubs>=4.2.6
+
+# Security scanning
+bandit>=1.7.5
+safety>=2.3.5
+
+# Pre-commit hooks
+pre-commit>=3.5.0
+
+# Documentation testing
+doc8>=1.1.1

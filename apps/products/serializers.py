@@ -86,12 +86,13 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'name', 'description', 'short_description', 'price',
+            'id', 'name', 'description', 'short_description', 'price',
             'compare_price', 'cost_price', 'category', 'tag_ids',
             'track_inventory', 'stock_quantity', 'low_stock_threshold',
             'is_active', 'is_featured', 'is_digital', 'meta_title',
             'meta_description'
         ]
+        read_only_fields = ['id']
     
     def validate_price(self, value):
         """Validate that price is positive."""

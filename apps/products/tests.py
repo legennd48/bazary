@@ -51,11 +51,14 @@ class ProductAPITestCase(APITestCase):
         self.product2 = FeaturedProductFactory(
             name='Featured Product',
             price=Decimal('199.99'),
+            category=CategoryFactory(),  # Different category
             created_by=self.admin_user
         )
         
         self.product3 = OutOfStockProductFactory(
             name='Out of Stock Product',
+            price=Decimal('50.00'),  # Low price to not interfere with price filtering
+            category=CategoryFactory(),  # Different category
             created_by=self.admin_user
         )
     

@@ -49,5 +49,8 @@ SECRET_KEY = 'test-secret-key-only-for-testing'
 # Debug
 DEBUG = False
 
+# Allowed hosts for testing
+ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
+
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True

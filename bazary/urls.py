@@ -41,11 +41,12 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
-    # API URLs
-    path('api/', include([
+    # API URLs v1
+    path('api/v1/', include([
         path('auth/', include('apps.authentication.urls')),
         path('categories/', include('apps.categories.urls')),
         path('products/', include('apps.products.urls')),
+        path('tags/', include('apps.products.tag_urls')),  # Tags at root level
     ])),
     
     # API Documentation

@@ -1,14 +1,14 @@
 """
-Products app URLs.
+Tag URLs - separated for clean API structure.
 """
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-# Products router only
+# Tags router
 router = DefaultRouter()
-router.register('', views.ProductViewSet, basename='product')
+router.register('', views.TagViewSet, basename='tag')
 
 urlpatterns = [
     path('', include(router.urls)),

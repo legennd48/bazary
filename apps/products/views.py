@@ -34,7 +34,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         """Set permissions based on action."""
-        if self.action in ['list', 'retrieve', 'search', 'featured']:
+        if self.action in ['list', 'retrieve', 'search', 'featured', 'in_stock']:
             permission_classes = [permissions.AllowAny]
         else:
             permission_classes = [permissions.IsAdminUser]

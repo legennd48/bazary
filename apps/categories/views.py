@@ -9,17 +9,47 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from apps.core.swagger_docs import (
+    SwaggerTags, SwaggerResponses, SwaggerExamples
+)
 from .models import Category
 from .serializers import (
     CategorySerializer, CategoryTreeSerializer, CategoryCreateSerializer
 )
 
 
+@swagger_auto_schema(
+    tags=[SwaggerTags.CATEGORIES],
+    operation_description="Category management endpoints for organizing products hierarchically."
+)
 class CategoryViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for category management.
+    ## Category Management API
     
-    Provides CRUD operations for categories with filtering and search.
+    Hierarchical category system for organizing products.
+    
+    ### 🗂️ Core Operations
+    - **List Categories**: Get all categories with filtering
+    - **Category Details**: Get detailed category information
+    - **Create Category**: Add new categories (Admin only)
+    - **Update Category**: Modify existing categories (Admin only)
+    - **Delete Category**: Remove categories (Admin only)
+    
+    ### 🌳 Hierarchical Features
+    - **Parent-Child Structure**: Support for nested categories
+    - **Tree View**: Get categories in tree structure
+    - **Root Categories**: Get top-level categories
+    - **Subcategories**: Get child categories
+    
+    ### 🔍 Advanced Features
+    - **Search**: Search categories by name and description
+    - **Filtering**: Filter by parent, active status
+    - **Sorting**: Sort by name, sort order, creation date
+    - **Product Integration**: Get products within categories
+    
+    ### 🔐 Permissions
+    - **Public Access**: List, detail, tree, and product views
+    - **Admin Only**: Create, update, delete operations
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer

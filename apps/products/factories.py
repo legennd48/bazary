@@ -74,6 +74,7 @@ class ProductFactory(factory.django.DjangoModelFactory):
         else:
             # Create a user if one wasn't provided
             user = User.objects.create_user(
+                username=f"user{self.id}",
                 email=f"user{self.id}@example.com",
                 password="testpass123"
             )

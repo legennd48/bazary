@@ -6,10 +6,16 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-router = DefaultRouter()
-router.register('', views.ProductViewSet, basename='product')
-router.register('tags', views.TagViewSet, basename='tag')
+# Create separate routers to avoid conflicts
+product_router = DefaultRouter()
+product_router.register('', views.ProductViewSet, basename='product')
+
+tag_router = DefaultRouter() 
+tag_router.register('', views.TagViewSet, basename='tag')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # Products at root level
+    path('', include(product_router.urls)),
+    # Tags at /tags/ level  
+    path('tags/', include(tag_router.urls)),
 ]

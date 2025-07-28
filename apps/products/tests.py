@@ -24,14 +24,15 @@ class ProductAPITestCase(APITestCase):
     def setUp(self):
         """Set up test data."""
         self.user = User.objects.create_user(
+            username='testuser',
             email='test@example.com',
             password='testpass123'
         )
         self.admin_user = User.objects.create_user(
+            username='adminuser',
             email='admin@example.com',
             password='testpass123',
-            is_staff=True,
-            is_superuser=True
+            is_staff=True
         )
         
         self.category = CategoryFactory()
@@ -228,6 +229,7 @@ class TagAPITestCase(APITestCase):
     def setUp(self):
         """Set up test data."""
         self.admin_user = User.objects.create_user(
+            username='adminuser',
             email='admin@example.com',
             password='testpass123',
             is_staff=True

@@ -1,11 +1,61 @@
 """
-Swagger documentation schemas and examples for the Bazary API.
-
-This module contains comprehensive documentation, examples, and testing
-instructions for all API endpoints.
+Centralized Swagger documentation configuration and examples.
 """
 
 from drf_yasg import openapi
+import os
+import json
+from pathlib import Path
+from django.conf import settings
+
+
+def get_captured_example(endpoint_name, method, status_code):
+    """
+    Get a captured example from the filesystem.
+    
+    Args:
+        endpoint_name: Name of the endpoint (e.g., 'auth_register')
+        method: HTTP method (e.g., 'POST')
+        status_code: HTTP status code (e.g., 201)
+        
+    Returns:
+        dict or None: The captured example response data
+    """
+    filename = f"{endpoint_name}_{method.lower()}_{status_code}.json"
+    filepath = os.path.join(settings.BASE_DIR, 'swagger_examples', filename)
+    
+    try:
+        if os.path.exists(filepath):
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+                
+                # Extract only the response_data for Swagger UI
+                if 'response_data' in data:
+                    return data['response_data']
+                else:
+                    return data
+    except Exception as e:
+        # Silently handle errors in production
+        pass
+    
+    return None
+
+
+def get_example_or_fallback(endpoint_name, method, status_code, fallback_example):
+    """
+    Get captured example or fall back to manual example.
+    
+    Args:
+        endpoint_name: Name of the endpoint
+        method: HTTP method
+        status_code: HTTP status code
+        fallback_example: Manual fallback example
+        
+    Returns:
+        dict: Example data
+    """
+    captured = get_captured_example(endpoint_name, method, status_code)
+    return captured if captured is not None else fallback_example
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 
@@ -130,8 +180,10 @@ class SwaggerExamples:
         "email": "user@example.com",
         "username": "newuser",
         "password": "SecurePass123!",
+        "password_confirm": "SecurePass123!",
         "first_name": "John",
-        "last_name": "Doe"
+        "last_name": "Doe",
+        "phone_number": "+1234567890"
     }
     
     LOGIN_EXAMPLE = {

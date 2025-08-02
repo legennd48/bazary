@@ -1,0 +1,14 @@
+{
+  "endpoint": "auth_token_refresh",
+  "method": "POST",
+  "status_code": 200,
+  "timestamp": "2025-08-02T10:15:17.239891",
+  "request_data": {
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1NDczNDUxNywiaWF0IjoxNzU0MTI5NzE3LCJqdGkiOiJiMjQ3OTFkNWY1YjI0OTI1OWI3MTAwNjAyNjFjMTY5NiIsInVzZXJfaWQiOiI3ZmJiNzNhZS1kMzcxLTRlZDgtYjc4NC1lZGNmYTEwZTljMzQifQ.Y5VOOJQ_ABD9iDb3fd6NBQHfPmrO-0BkTtgdle28Fvo"
+  },
+  "response_data": {
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU0MTMwNjE3LCJpYXQiOjE3NTQxMjk3MTcsImp0aSI6IjdkMDM1ZjdiZThhOTQ5MTk4MjI3NmY4OTVmYTcxOWI4IiwidXNlcl9pZCI6IjdmYmI3M2FlLWQzNzEtNGVkOC1iNzg0LWVkY2ZhMTBlOWMzNCJ9.GleIUEyCpYaTVejHSXaxm6_fhSRzO6GHOWoYOL7tDS8",
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1NDczNDUxNywiaWF0IjoxNzU0MTI5NzE3LCJqdGkiOiJjYjU1YTU1NDZhY2M0NzEyODYwZWFkNjQ2ODA1NTg2OCIsInVzZXJfaWQiOiI3ZmJiNzNhZS1kMzcxLTRlZDgtYjc4NC1lZGNmYTEwZTljMzQifQ.poqDPWJ8uUFOeW5l_q1KbO4pxfOXDeMduwI671pk4bM"
+  },
+  "headers": {}
+}

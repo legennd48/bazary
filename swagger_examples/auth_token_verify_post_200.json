@@ -1,0 +1,11 @@
+{
+  "endpoint": "auth_token_verify",
+  "method": "POST",
+  "status_code": 200,
+  "timestamp": "2025-08-02T10:15:26.274773",
+  "request_data": {
+    "token": "***HIDDEN***"
+  },
+  "response_data": {},
+  "headers": {}
+}

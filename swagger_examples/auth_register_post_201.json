@@ -1,0 +1,30 @@
+{
+  "endpoint": "auth_register",
+  "method": "POST",
+  "status_code": 201,
+  "timestamp": "2025-08-02T09:58:34.588474",
+  "request_data": {
+    "email": "logintest@example.com",
+    "username": "logintest",
+    "password": "***HIDDEN***",
+    "password_confirm": "***HIDDEN***"
+  },
+  "response_data": {
+    "message": "User registered successfully",
+    "user": {
+      "id": "7fbb73ae-d371-4ed8-b784-edcfa10e9c34",
+      "username": "logintest",
+      "email": "logintest@example.com",
+      "first_name": "",
+      "last_name": "",
+      "phone_number": "",
+      "is_verified": false,
+      "date_of_birth": null,
+      "avatar": null,
+      "date_joined": "2025-08-02T09:58:34.259081Z",
+      "last_login": null,
+      "is_active": true
+    }
+  },
+  "headers": {}
+}

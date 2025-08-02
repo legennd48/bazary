@@ -7,13 +7,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 from django.contrib.auth import get_user_model
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from apps.core.swagger_docs import (
     SwaggerTags, SwaggerResponses, SwaggerExamples, 
-    get_testing_instructions_response
+    get_testing_instructions_response, get_example_or_fallback
 )
+from apps.core.capture_decorator import capture_for_swagger
 from .models import User
 from .serializers import (
     UserSerializer, RegisterSerializer, ProfileSerializer,
@@ -53,10 +55,12 @@ class RegisterView(APIView):
         - **email**: Valid email address (unique)
         - **username**: Unique username
         - **password**: Strong password (min 8 characters)
+        - **password_confirm**: Password confirmation (must match password)
         
         ### Optional Fields:
         - **first_name**: User's first name
         - **last_name**: User's last name
+        - **phone_number**: User's phone number
         
         ### Response:
         Returns user data (excluding password) upon successful registration.
@@ -67,39 +71,48 @@ class RegisterView(APIView):
                 'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='User email address'),
                 'username': openapi.Schema(type=openapi.TYPE_STRING, description='Unique username'),
                 'password': openapi.Schema(type=openapi.TYPE_STRING, description='Strong password (min 8 characters)'),
+                'password_confirm': openapi.Schema(type=openapi.TYPE_STRING, description='Password confirmation (must match password)'),
                 'first_name': openapi.Schema(type=openapi.TYPE_STRING, description='First name'),
                 'last_name': openapi.Schema(type=openapi.TYPE_STRING, description='Last name'),
+                'phone_number': openapi.Schema(type=openapi.TYPE_STRING, description='Phone number'),
             },
-            required=['email', 'username', 'password'],
+            required=['email', 'username', 'password', 'password_confirm'],
             example=SwaggerExamples.REGISTER_EXAMPLE
         ),
         responses={
             201: openapi.Response(
                 "User registered successfully",
                 examples={
-                    "application/json": {
-                        "message": "User registered successfully",
-                        "user": {
-                            "id": "user-uuid",
-                            "email": "user@example.com",
-                            "username": "newuser",
-                            "first_name": "John",
-                            "last_name": "Doe"
+                    "application/json": get_example_or_fallback(
+                        'auth_register', 'POST', 201,
+                        {
+                            "message": "User registered successfully",
+                            "user": {
+                                "id": "user-uuid",
+                                "email": "user@example.com",
+                                "username": "newuser",
+                                "first_name": "John",
+                                "last_name": "Doe"
+                            }
                         }
-                    }
+                    )
                 }
             ),
             400: openapi.Response(
                 "Validation error",
                 examples={
-                    "application/json": {
-                        "email": ["This email is already registered."],
-                        "password": ["Password must be at least 8 characters long."]
-                    }
+                    "application/json": get_example_or_fallback(
+                        'auth_register', 'POST', 400,
+                        {
+                            "email": ["This email is already registered."],
+                            "password": ["Password must be at least 8 characters long."]
+                        }
+                    )
                 }
             )
         }
     )
+    @capture_for_swagger('auth_register')
     def post(self, request):
         """Register a new user."""
         serializer = RegisterSerializer(data=request.data)
@@ -313,3 +326,184 @@ class UserViewSet(viewsets.ModelViewSet):
             'format': 'markdown',
             'last_updated': '2025-01-28'
         })
+
+
+# Custom JWT Views with Swagger Documentation
+class CustomTokenObtainPairView(TokenObtainPairView):
+    @swagger_auto_schema(
+        operation_summary="User login with JWT tokens",
+        operation_description="""
+        Authenticate user and obtain JWT access and refresh tokens.
+        
+        **Testing Steps:**
+        1. Use email and password of an existing user account
+        2. Submit login credentials
+        3. Receive access token (valid for 60 minutes) and refresh token (valid for 1 day)
+        4. Use access token in Authorization header: `Bearer <access_token>`
+        5. Use refresh token to get new access tokens when expired
+        
+        **Success Response:** Access token and refresh token
+        **Error Response:** Invalid credentials error
+        """,
+        tags=[SwaggerTags.AUTHENTICATION],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email', 'password'],
+            properties={
+                'email': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_EMAIL,
+                    description='Email address of registered user',
+                    example='user@example.com'
+                ),
+                'password': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    format=openapi.FORMAT_PASSWORD,
+                    description='User password',
+                    example='userpassword123'
+                )
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Login successful - JWT tokens returned",
+                examples={
+                    "application/json": get_example_or_fallback(
+                        'auth_login', 'POST', 200,
+                        {
+                            "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+                            "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                        }
+                    )
+                }
+            ),
+            401: openapi.Response(
+                description="Invalid credentials",
+                examples={
+                    "application/json": get_example_or_fallback(
+                        'auth_login', 'POST', 401,
+                        {
+                            "detail": "No active account found with the given credentials"
+                        }
+                    )
+                }
+            )
+        }
+    )
+    @capture_for_swagger('auth_login')
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    @swagger_auto_schema(
+        operation_summary="Refresh JWT access token",
+        operation_description="""
+        Use refresh token to obtain a new access token when the current one expires.
+        
+        **Testing Steps:**
+        1. Use the refresh token obtained from login
+        2. Submit refresh token to get new access token
+        3. New access token is valid for another 60 minutes
+        4. Continue using new access token for authenticated requests
+        
+        **Success Response:** New access token
+        **Error Response:** Invalid or expired refresh token
+        """,
+        tags=[SwaggerTags.AUTHENTICATION],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['refresh'],
+            properties={
+                'refresh': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Valid refresh token from login',
+                    example='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                )
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Token refresh successful",
+                examples={
+                    "application/json": get_example_or_fallback(
+                        'auth_token_refresh', 'POST', 200,
+                        {
+                            "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                        }
+                    )
+                }
+            ),
+            401: openapi.Response(
+                description="Invalid or expired refresh token",
+                examples={
+                    "application/json": get_example_or_fallback(
+                        'auth_token_refresh', 'POST', 401,
+                        {
+                            "detail": "Token is invalid or expired",
+                            "code": "token_not_valid"
+                        }
+                    )
+                }
+            )
+        }
+    )
+    @capture_for_swagger('auth_token_refresh')
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class CustomTokenVerifyView(TokenVerifyView):
+    @swagger_auto_schema(
+        operation_summary="Verify JWT token validity",
+        operation_description="""
+        Verify if a JWT token is valid and not expired.
+        
+        **Testing Steps:**
+        1. Use an access token from login or refresh
+        2. Submit token for verification
+        3. Check if token is valid and active
+        4. Use for debugging authentication issues
+        
+        **Success Response:** Empty response (200 status means token is valid)
+        **Error Response:** Token validation error details
+        """,
+        tags=[SwaggerTags.AUTHENTICATION],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['token'],
+            properties={
+                'token': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='JWT token to verify',
+                    example='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                )
+            }
+        ),
+        responses={
+            200: openapi.Response(
+                description="Token is valid",
+                examples={
+                    "application/json": get_example_or_fallback(
+                        'auth_token_verify', 'POST', 200,
+                        {}
+                    )
+                }
+            ),
+            401: openapi.Response(
+                description="Token is invalid or expired",
+                examples={
+                    "application/json": get_example_or_fallback(
+                        'auth_token_verify', 'POST', 401,
+                        {
+                            "detail": "Token is invalid or expired",
+                            "code": "token_not_valid"
+                        }
+                    )
+                }
+            )
+        }
+    )
+    @capture_for_swagger('auth_token_verify')
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

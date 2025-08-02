@@ -26,12 +26,60 @@ from drf_yasg import openapi
 # Swagger/OpenAPI schema configuration
 schema_view = get_schema_view(
     openapi.Info(
-        title="Bazary E-Commerce API",
+        title="🛒 Bazary E-Commerce API",
         default_version='v1',
-        description="A comprehensive e-commerce backend API built with Django REST Framework",
-        terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="contact@bazary.com"),
-        license=openapi.License(name="MIT License"),
+        description="""
+# Bazary E-Commerce Backend API
+
+Welcome to the comprehensive e-commerce backend API built with Django REST Framework.
+
+## 📋 Overview
+
+This API provides complete e-commerce functionality including:
+
+### 🛍️ Core Features
+- **Product Management**: Full CRUD operations with advanced filtering and search
+- **Category System**: Hierarchical product organization
+- **Tag System**: Flexible product labeling and categorization
+- **User Authentication**: JWT-based secure authentication
+- **Advanced Search**: Multi-field search with filtering and sorting
+- **Stock Management**: Real-time inventory tracking
+
+### 🚀 API Highlights
+- **RESTful Design**: Following REST API best practices
+- **Comprehensive Documentation**: Detailed endpoint descriptions and examples
+- **Testing Instructions**: Built-in testing guides for each module
+- **Performance Optimized**: Database query optimization and pagination
+- **Security First**: Authentication and permission-based access control
+
+## 🔗 Quick Links
+- **Testing Instructions**: Available at `/api/v1/products/testing-instructions/`
+- **GitHub Repository**: [Bazary on GitHub](https://github.com/legennd48/bazary)
+- **Documentation**: Complete API documentation below
+
+## 🔐 Authentication
+Most endpoints require JWT authentication. Get your access token from the `/api/v1/auth/login/` endpoint.
+
+## 📚 API Versioning
+All endpoints are versioned with `/api/v1/` prefix for future compatibility.
+
+## 📊 Rate Limiting
+API requests are rate-limited to ensure fair usage and optimal performance.
+
+---
+
+**Built with ❤️ using Django REST Framework**
+        """,
+        terms_of_service="https://bazary.com/terms/",
+        contact=openapi.Contact(
+            name="Bazary API Support",
+            email="api-support@bazary.com",
+            url="https://bazary.com/support/"
+        ),
+        license=openapi.License(
+            name="MIT License",
+            url="https://opensource.org/licenses/MIT"
+        ),
     ),
     public=True,
     permission_classes=[permissions.AllowAny],

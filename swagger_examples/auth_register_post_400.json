@@ -1,0 +1,21 @@
+{
+  "endpoint": "auth_register",
+  "method": "POST",
+  "status_code": 400,
+  "timestamp": "2025-08-02T09:58:40.797275",
+  "request_data": {
+    "email": "logintest@example.com",
+    "username": "logintest",
+    "password": "***HIDDEN***",
+    "password_confirm": "***HIDDEN***"
+  },
+  "response_data": {
+    "username": [
+      "A user with that username already exists."
+    ],
+    "email": [
+      "user with this email already exists."
+    ]
+  },
+  "headers": {}
+}

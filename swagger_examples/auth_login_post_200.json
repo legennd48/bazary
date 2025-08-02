@@ -2,14 +2,14 @@
   "endpoint": "auth_login",
   "method": "POST",
   "status_code": 200,
-  "timestamp": "2025-08-02T10:15:26.255435",
+  "timestamp": "2025-08-02T10:52:35.572216",
   "request_data": {
-    "email": "logintest@example.com",
+    "email": "testuser@example.com",
     "password": "***HIDDEN***"
   },
   "response_data": {
-    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1NDczNDUyNiwiaWF0IjoxNzU0MTI5NzI2LCJqdGkiOiIzNGQ3NTYzODU5ZjY0ZTkyYWZjNGViZGQ3NWViYTg3NyIsInVzZXJfaWQiOiI3ZmJiNzNhZS1kMzcxLTRlZDgtYjc4NC1lZGNmYTEwZTljMzQifQ.o8xYhrrw1TZahwWzbRUyhKM0bfE5w2v1tK-iGz2skVU",
-    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU0MTMwNjI2LCJpYXQiOjE3NTQxMjk3MjYsImp0aSI6IjA1YjVjNzM2MzUxZjQzYTE5YjEyMWFjYjRlZWNiZmUxIiwidXNlcl9pZCI6IjdmYmI3M2FlLWQzNzEtNGVkOC1iNzg0LWVkY2ZhMTBlOWMzNCJ9.EQ6XzVWsji7lzaIW-X8YS1R8_R-hKG-AqvzqvCpwFhA"
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1NDczNjc1NSwiaWF0IjoxNzU0MTMxOTU1LCJqdGkiOiJjZDRhZjlkNTc1YWE0MTY4OTVlNjY5Nzg4OWUyNWQ1MiIsInVzZXJfaWQiOiJjM2YxNGIxMC00NDg1LTQ2MzEtOGE2ZC02NGIzYjI5MTA2YWQifQ.F9rRgG8Xo5RhNkGOBEpMcLJQxePp8UpCe3ZngxLrkFQ",
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU0MTMyODU1LCJpYXQiOjE3NTQxMzE5NTUsImp0aSI6IjkwMGJlMDRmZTNmZjRhNjdhNDM3ZWJkZmI4NmVkN2RlIiwidXNlcl9pZCI6ImMzZjE0YjEwLTQ0ODUtNDYzMS04YTZkLTY0YjNiMjkxMDZhZCJ9.OybPqB79qxIdc44FNTiho5hrP_WOO6Pki5gNsbh7yyA"
   },
   "headers": {}
 }

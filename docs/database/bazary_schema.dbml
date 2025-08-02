@@ -1,0 +1,279 @@
+// Bazary E-commerce Database Schema
+// Generated for: dbdiagram.io
+// Last Updated: August 2, 2025
+// Purpose: Visual database architecture documentation
+
+Project bazary_ecommerce {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Bazary E-commerce Platform Database
+    
+    Modern e-commerce database schema built with Django 5.0+ and PostgreSQL.
+    Supports hierarchical categories, comprehensive product management,
+    user authentication, and scalable architecture.
+    
+    ## Key Features:
+    - UUID-based user identification
+    - Hierarchical category system
+    - Multi-image product support
+    - Flexible tagging system
+    - Optimized for performance and scalability
+  '''
+}
+
+// =============================================================================
+// USERS & AUTHENTICATION
+// =============================================================================
+
+Table users {
+  id uuid [primary key, note: 'UUID primary key for enhanced security']
+  username varchar(150) [unique, not null, note: 'Login username']
+  email varchar(254) [unique, not null, note: 'Primary email address for login']
+  first_name varchar(150) [note: 'User first name']
+  last_name varchar(150) [note: 'User last name']
+  phone_number varchar(15) [note: 'Contact phone number']
+  is_verified boolean [default: false, note: 'Email verification status']
+  date_of_birth date [note: 'Birth date for age-restricted products']
+  avatar varchar(100) [note: 'Profile picture file path']
+  is_active boolean [default: true, note: 'Account active status']
+  is_staff boolean [default: false, note: 'Staff admin access']
+  is_superuser boolean [default: false, note: 'Superuser admin access']
+  date_joined timestamp [default: `now()`, note: 'Account creation timestamp']
+  last_login timestamp [note: 'Last login timestamp']
+  
+  Note: '''
+    Extended Django user model with e-commerce specific fields.
+    Uses UUID for enhanced security and future-proofing.
+    Supports role-based access control and email verification.
+  '''
+}
+
+// =============================================================================
+// PRODUCT CATALOG
+// =============================================================================
+
+Table categories {
+  id bigint [primary key, increment, note: 'Category identifier']
+  name varchar(100) [unique, not null, note: 'Category display name']
+  slug varchar(100) [unique, not null, note: 'URL-friendly identifier']
+  description text [note: 'Category description']
+  image varchar(100) [note: 'Category image path']
+  parent_id bigint [ref: > categories.id, note: 'Parent category (hierarchical)']
+  is_active boolean [default: true, note: 'Category visibility status']
+  sort_order integer [default: 0, note: 'Display order']
+  created_at timestamp [default: `now()`, note: 'Creation timestamp']
+  updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+  
+  indexes {
+    (parent_id, is_active, sort_order) [name: 'idx_categories_hierarchy']
+    slug [name: 'idx_categories_slug']
+  }
+  
+  Note: '''
+    Hierarchical category system supporting unlimited nesting depth.
+    Categories can have parent-child relationships for organization.
+    Includes slug generation for SEO-friendly URLs.
+  '''
+}
+
+Table products {
+  id bigint [primary key, increment, note: 'Product identifier']
+  name varchar(255) [not null, note: 'Product display name']
+  slug varchar(255) [unique, not null, note: 'SEO-friendly URL identifier']
+  description text [not null, note: 'Detailed product description']
+  short_description varchar(500) [note: 'Brief product summary']
+  sku varchar(100) [unique, not null, note: 'Stock keeping unit']
+  price decimal(10,2) [not null, note: 'Current selling price']
+  compare_price decimal(10,2) [note: 'Original/MSRP price for discounts']
+  cost_price decimal(10,2) [note: 'Internal cost price']
+  category_id bigint [ref: > categories.id, not null, note: 'Product category']
+  track_inventory boolean [default: true, note: 'Enable inventory tracking']
+  stock_quantity integer [default: 0, note: 'Current stock level']
+  low_stock_threshold integer [default: 10, note: 'Low stock warning level']
+  is_active boolean [default: true, note: 'Product visibility status']
+  is_featured boolean [default: false, note: 'Featured product flag']
+  is_digital boolean [default: false, note: 'Digital product (no shipping)']
+  meta_title varchar(255) [note: 'SEO meta title']
+  meta_description text [note: 'SEO meta description']
+  created_by_id uuid [ref: > users.id, not null, note: 'Product creator']
+  created_at timestamp [default: `now()`, note: 'Creation timestamp']
+  updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+  
+  indexes {
+    (category_id, is_active) [name: 'idx_products_category_active']
+    (is_active, is_featured) [name: 'idx_products_featured']
+    (is_active, created_at) [name: 'idx_products_recent']
+    slug [name: 'idx_products_slug']
+    sku [name: 'idx_products_sku']
+    price [name: 'idx_products_price']
+  }
+  
+  Note: '''
+    Comprehensive product model supporting both physical and digital products.
+    Includes inventory management, pricing, SEO optimization, and categorization.
+    Stock tracking can be enabled/disabled per product.
+  '''
+}
+
+Table product_images {
+  id bigint [primary key, increment, note: 'Image identifier']
+  product_id bigint [ref: > products.id, not null, note: 'Associated product']
+  image varchar(100) [not null, note: 'Image file path']
+  alt_text varchar(255) [note: 'Accessibility alt text']
+  is_primary boolean [default: false, note: 'Primary product image']
+  sort_order integer [default: 0, note: 'Display order']
+  created_at timestamp [default: `now()`, note: 'Upload timestamp']
+  updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+  
+  indexes {
+    (product_id, is_primary) [name: 'idx_product_images_primary']
+    (product_id, sort_order) [name: 'idx_product_images_order']
+  }
+  
+  Note: '''
+    Multiple images per product with ordering and primary image designation.
+    Only one image per product can be marked as primary.
+    Supports accessibility with alt text for screen readers.
+  '''
+}
+
+Table tags {
+  id bigint [primary key, increment, note: 'Tag identifier']
+  name varchar(50) [unique, not null, note: 'Tag display name']
+  slug varchar(50) [unique, not null, note: 'URL-friendly identifier']
+  color varchar(7) [default: '#007bff', note: 'Display color (hex)']
+  created_at timestamp [default: `now()`, note: 'Creation timestamp']
+  updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+  
+  indexes {
+    slug [name: 'idx_tags_slug']
+    name [name: 'idx_tags_name']
+  }
+  
+  Note: '''
+    Product tagging system for flexible categorization and filtering.
+    Tags can be used for promotions, features, or custom attributes.
+    Includes color coding for visual representation.
+  '''
+}
+
+Table products_tags {
+  id bigint [primary key, increment, note: 'Junction table identifier']
+  product_id bigint [ref: > products.id, not null, note: 'Product reference']
+  tag_id bigint [ref: > tags.id, not null, note: 'Tag reference']
+  
+  indexes {
+    (product_id, tag_id) [unique, name: 'idx_products_tags_unique']
+    product_id [name: 'idx_products_tags_product']
+    tag_id [name: 'idx_products_tags_tag']
+  }
+  
+  Note: '''
+    Many-to-many relationship between products and tags.
+    Enables flexible product labeling and filtering capabilities.
+  '''
+}
+
+// =============================================================================
+// RELATIONSHIPS DOCUMENTATION
+// =============================================================================
+
+// User Relationships
+Ref: products.created_by_id > users.id [delete: protect, note: 'Products track their creator. Cannot delete users with products.']
+
+// Category Relationships  
+Ref: categories.parent_id > categories.id [delete: cascade, note: 'Self-referencing hierarchy. Deleting parent removes children.']
+Ref: products.category_id > categories.id [delete: protect, note: 'Products belong to categories. Cannot delete categories with products.']
+
+// Product Image Relationships
+Ref: product_images.product_id > products.id [delete: cascade, note: 'Product images are deleted when product is deleted.']
+
+// Product Tag Relationships (Many-to-Many)
+Ref: products_tags.product_id > products.id [delete: cascade, note: 'Remove tag associations when product is deleted.']
+Ref: products_tags.tag_id > tags.id [delete: cascade, note: 'Remove product associations when tag is deleted.']
+
+// =============================================================================
+// TABLE GROUPS FOR VISUALIZATION
+// =============================================================================
+
+TableGroup "Authentication & Users" {
+  users
+}
+
+TableGroup "Product Catalog" {
+  categories
+  products
+  product_images
+  tags
+  products_tags
+}
+
+// =============================================================================
+// DATABASE NOTES & DOCUMENTATION
+// =============================================================================
+
+Note users_security: '''
+## User Security Features
+
+1. **UUID Primary Keys**: Enhanced security, prevents ID enumeration
+2. **Email Verification**: Two-step verification process
+3. **Role-based Access**: Staff/superuser permissions
+4. **Account Management**: Soft delete via is_active flag
+
+## Authentication Flow
+- Users can login with email or username
+- Email verification required for sensitive operations
+- Staff permissions required for product management
+'''
+
+Note product_catalog: '''
+## Product Catalog Features
+
+1. **Hierarchical Categories**: Unlimited nesting depth
+2. **Multi-Image Support**: Primary image designation with ordering
+3. **Flexible Tagging**: Many-to-many tag relationships
+4. **Inventory Management**: Optional stock tracking per product
+5. **SEO Optimization**: Slugs, meta titles, and descriptions
+
+## Performance Optimizations
+- Composite indexes for common query patterns
+- Efficient category hierarchy queries
+- Optimized product filtering and sorting
+'''
+
+Note data_integrity: '''
+## Data Integrity Constraints
+
+1. **Foreign Key Constraints**: Ensure referential integrity
+2. **Unique Constraints**: Prevent duplicate slugs and SKUs
+3. **Check Constraints**: Positive prices and stock quantities
+4. **Cascade Rules**: Controlled deletion behavior
+
+## Business Rules
+- Only staff users can create products
+- Categories with products cannot be deleted
+- Primary image uniqueness per product
+- Hierarchical category structure validation
+'''
+
+Note performance_notes: '''
+## Database Performance Considerations
+
+### Indexing Strategy
+- Primary indexes on all primary keys
+- Foreign key indexes for relationship queries
+- Composite indexes for common filter combinations
+- Unique indexes for business constraints
+
+### Query Optimization
+- Use select_related() for foreign key relationships
+- Use prefetch_related() for many-to-many relationships
+- Implement pagination for large result sets
+- Consider database connection pooling
+
+### Scalability
+- Supports up to 100K products efficiently
+- Hierarchical categories handle deep nesting
+- Image storage ready for CDN integration
+- Designed for horizontal scaling
+'''

@@ -13,6 +13,9 @@ from apps.core.swagger_docs import (
     SwaggerTags, SwaggerResponses, SwaggerExamples, 
     SwaggerParameters, get_testing_instructions_response
 )
+from apps.core.permissions.product import ProductPermission, ProductBulkOperationPermission
+from apps.core.permissions import IsAdminOrReadOnly
+from apps.core.throttling.decorators import search_ratelimit, RateLimitMixin
 from .models import Product, Tag
 from .serializers import (
     ProductListSerializer, ProductDetailSerializer,
@@ -26,7 +29,7 @@ from .filters import ProductFilter
     tags=[SwaggerTags.PRODUCTS],
     operation_description="Product management endpoints with CRUD operations, filtering, and search capabilities."
 )
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
     """
     ## Product Management API
     
@@ -203,9 +206,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         """Set permissions based on action."""
         if self.action in ['list', 'retrieve', 'search', 'featured', 'in_stock']:
-            permission_classes = [permissions.AllowAny]
+            permission_classes = [ProductPermission]
         else:
-            permission_classes = [permissions.IsAdminUser]
+            permission_classes = [ProductPermission]
         return [permission() for permission in permission_classes]
     
     def get_serializer_class(self):
@@ -273,6 +276,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         }
     )
     @action(detail=False, methods=['get'])
+    @search_ratelimit(rate='30/m')
     def search(self, request):
         """Advanced product search."""
         queryset = self.get_queryset()
@@ -472,7 +476,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             404: openapi.Response("Product not found")
         }
     )
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=['post'], permission_classes=[ProductBulkOperationPermission])
     def update_stock(self, request, pk=None):
         """Update product stock quantity."""
         product = self.get_object()
@@ -577,6 +581,7 @@ class TagViewSet(viewsets.ModelViewSet):
     """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['name', 'created_at']
@@ -688,8 +693,4 @@ class TagViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Set permissions based on action."""
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [permissions.AllowAny]
-        else:
-            permission_classes = [permissions.IsAdminUser]
-        return [permission() for permission in permission_classes]
+        return [IsAdminOrReadOnly()]

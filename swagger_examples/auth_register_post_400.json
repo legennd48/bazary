@@ -2,12 +2,15 @@
   "endpoint": "auth_register",
   "method": "POST",
   "status_code": 400,
-  "timestamp": "2025-08-02T09:58:40.797275",
+  "timestamp": "2025-08-02T13:41:44.680655",
   "request_data": {
-    "email": "logintest@example.com",
-    "username": "logintest",
+    "email": "legennd48@gmail.com",
+    "username": "legennd",
     "password": "***HIDDEN***",
-    "password_confirm": "***HIDDEN***"
+    "password_confirm": "***HIDDEN***",
+    "first_name": "John",
+    "last_name": "Doe",
+    "phone_number": "+1234567890"
   },
   "response_data": {
     "username": [

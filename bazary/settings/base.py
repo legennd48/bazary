@@ -18,6 +18,12 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='django-insecure-change-me-in-production')
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = config('DJANGO_DEBUG', default=False, cast=bool)
+
+# Allowed hosts
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [h.strip() for h in v.split(',')])
+
 # Application definition
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -34,6 +40,7 @@ THIRD_PARTY_APPS = [
     'corsheaders',
     'django_filters',
     'drf_yasg',
+    # 'django_ratelimit',  # TODO: Enable once Redis is configured
 ]
 
 LOCAL_APPS = [
@@ -47,6 +54,8 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'apps.core.middleware.SecurityHeadersMiddleware',
+    'apps.core.middleware.RequestSanitizationMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -55,6 +64,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.core.middleware.APISecurityLoggingMiddleware',
+    'apps.core.middleware.IPWhitelistMiddleware',
 ]
 
 ROOT_URLCONF = 'bazary.urls'
@@ -107,6 +118,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Cache configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'bazary-cache',
+    }
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 LANGUAGE_CODE = 'en-us'
@@ -142,6 +161,21 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'apps.core.throttling.BurstRateThrottle',
+        'apps.core.throttling.SustainedRateThrottle',
+        'apps.core.throttling.AnonymousThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'burst': '60/min',
+        'sustained': '1000/day',
+        'anon': '30/hour',
+        'login': '5/min',
+        'registration': '3/hour',
+        'search': '30/min',
+        'admin': '100/hour',
+        'api_key': '1000/hour',
+    },
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
@@ -266,3 +300,41 @@ LOGGING = {
 
 # Create logs directory if it doesn't exist
 os.makedirs(BASE_DIR / 'logs', exist_ok=True)
+
+# =============================================================================
+# SECURITY SETTINGS
+# =============================================================================
+
+# Rate limiting settings
+RATELIMIT_ENABLE = config('RATELIMIT_ENABLE', default=False, cast=bool)  # Disabled for now
+RATELIMIT_USE_CACHE = 'default'
+
+# IP Whitelist settings (empty by default)
+IP_WHITELIST = config('IP_WHITELIST', default='', cast=lambda v: [ip.strip() for ip in v.split(',') if ip.strip()])
+ADMIN_IP_WHITELIST = config('ADMIN_IP_WHITELIST', default='', cast=lambda v: [ip.strip() for ip in v.split(',') if ip.strip()])
+
+# Security headers configuration
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Session security
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Additional security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True, cast=bool)
+    SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=True, cast=bool)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# API Security settings
+API_SECURITY_ENABLED = config('API_SECURITY_ENABLED', default=True, cast=bool)
+API_REQUEST_SANITIZATION = config('API_REQUEST_SANITIZATION', default=True, cast=bool)
+API_SECURITY_LOGGING = config('API_SECURITY_LOGGING', default=True, cast=bool)

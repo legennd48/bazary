@@ -16,6 +16,10 @@ from apps.core.swagger_docs import (
     get_testing_instructions_response, get_example_or_fallback
 )
 from apps.core.capture_decorator import capture_for_swagger
+from apps.core.permissions import (
+    UserManagementPermission, ProfilePermission, PasswordChangePermission
+)
+from apps.core.throttling.decorators import login_ratelimit, registration_ratelimit
 from .models import User
 from .serializers import (
     UserSerializer, RegisterSerializer, ProfileSerializer,
@@ -113,6 +117,7 @@ class RegisterView(APIView):
         }
     )
     @capture_for_swagger('auth_register')
+    @registration_ratelimit(rate='3/h')
     def post(self, request):
         """Register a new user."""
         serializer = RegisterSerializer(data=request.data)
@@ -146,7 +151,7 @@ class ProfileView(APIView):
     - User can only view/edit their own profile
     - Password updates handled separately
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ProfilePermission]
     
     @swagger_auto_schema(
         tags=[SwaggerTags.AUTHENTICATION],
@@ -246,7 +251,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [UserManagementPermission]
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
@@ -257,7 +262,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=['post'],
-        permission_classes=[IsAuthenticated],
+        permission_classes=[PasswordChangePermission],
         serializer_class=ChangePasswordSerializer
     )
     def change_password(self, request, pk=None):
@@ -391,6 +396,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         }
     )
     @capture_for_swagger('auth_login')
+    @login_ratelimit(rate='5/m')
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 

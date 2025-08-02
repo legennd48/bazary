@@ -2,16 +2,22 @@
   "endpoint": "auth_register",
   "method": "POST",
   "status_code": 400,
-  "timestamp": "2025-08-02T13:06:58.506945",
+  "timestamp": "2025-08-02T13:41:44.680655",
   "request_data": {
-    "username": "testuser",
-    "email": "test@example.com",
+    "email": "legennd48@gmail.com",
+    "username": "legennd",
     "password": "***HIDDEN***",
-    "password_confirm": "***HIDDEN***"
+    "password_confirm": "***HIDDEN***",
+    "first_name": "John",
+    "last_name": "Doe",
+    "phone_number": "+1234567890"
   },
   "response_data": {
     "username": [
       "A user with that username already exists."
+    ],
+    "email": [
+      "user with this email already exists."
     ]
   },
   "headers": {}

@@ -17,6 +17,14 @@ DATABASES = {
     }
 }
 
+# Development cache configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'bazary-dev-cache',
+    }
+}
+
 # Add development-specific apps
 INSTALLED_APPS += [
     'django_extensions',
@@ -39,6 +47,9 @@ try:
     }
 except ImportError:
     pass
+
+# Security settings for development - disable HTTPS redirect
+SECURE_SSL_REDIRECT = False
 
 # CORS settings for development
 CORS_ALLOW_ALL_ORIGINS = True

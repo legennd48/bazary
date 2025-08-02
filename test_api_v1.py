@@ -14,9 +14,9 @@ def test_endpoint(name, method, url, data=None, headers=None):
     """Test an API endpoint"""
     try:
         if method.upper() == "GET":
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, verify=False)
         elif method.upper() == "POST":
-            response = requests.post(url, json=data, headers=headers)
+            response = requests.post(url, json=data, headers=headers, verify=False)
         
         status = "✅ PASS" if response.status_code < 400 else "❌ FAIL"
         print(f"{status} {name}: {response.status_code}")

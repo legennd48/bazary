@@ -123,8 +123,11 @@ celerybeat.pid
 .env
 .env.local
 .env.dev
+.env.development
 .env.staging
 .env.prod
+.env.production
+.env.testing
 .venv
 env/
 venv/

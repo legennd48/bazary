@@ -3,13 +3,13 @@ Security middleware for API protection.
 """
 
 import logging
+import re
 import time
+
+from django.conf import settings
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
-from django.conf import settings
-import re
-
 
 logger = logging.getLogger(__name__)
 

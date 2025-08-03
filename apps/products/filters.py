@@ -2,10 +2,13 @@
 Product filters for advanced search and filtering.
 """
 
+from django.db.models import F, Q
+
 import django_filters
-from django.db.models import Q, F
-from .models import Product, Tag
+
 from apps.categories.models import Category
+
+from .models import Product, Tag
 
 
 class ProductFilter(django_filters.FilterSet):

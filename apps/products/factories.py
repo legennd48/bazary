@@ -2,11 +2,15 @@
 Factory classes for testing products app.
 """
 
+from decimal import Decimal
+
+from django.contrib.auth import get_user_model
+
 import factory
 from factory import fuzzy
-from decimal import Decimal
-from django.contrib.auth import get_user_model
+
 from apps.categories.models import Category
+
 from .models import Product, ProductImage, Tag
 
 User = get_user_model()

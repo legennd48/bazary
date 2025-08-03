@@ -8,26 +8,27 @@ different apps to implement consistent authorization logic.
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
-# Import permission classes from submodules
-from .user import (
-    UserManagementPermission,
-    ProfilePermission,
-    PasswordChangePermission,
-    UserRolePermission,
-    UserActivationPermission,
-)
-from .product import (
-    ProductPermission,
-    ProductOwnershipPermission,
-    ProductBulkOperationPermission,
-    ProductAnalyticsPermission,
-)
 from .mixins import (
-    OwnershipMixin,
     AdminAccessMixin,
-    ReadOnlyMixin,
     AuthenticationMixin,
     CombinedPermissionMixin,
+    OwnershipMixin,
+    ReadOnlyMixin,
+)
+from .product import (
+    ProductAnalyticsPermission,
+    ProductBulkOperationPermission,
+    ProductOwnershipPermission,
+    ProductPermission,
+)
+
+# Import permission classes from submodules
+from .user import (
+    PasswordChangePermission,
+    ProfilePermission,
+    UserActivationPermission,
+    UserManagementPermission,
+    UserRolePermission,
 )
 
 

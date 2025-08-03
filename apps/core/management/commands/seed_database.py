@@ -4,10 +4,12 @@ Django management command to seed the database with realistic test data.
 
 import logging
 from decimal import Decimal
-from django.core.management.base import BaseCommand
+
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
+
 from apps.categories.models import Category
 from apps.products.models import Product, ProductImage, Tag
 

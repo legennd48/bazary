@@ -3,6 +3,7 @@ Decorator for capturing API responses for Swagger documentation.
 """
 
 from functools import wraps
+
 from .response_capture import response_capture
 
 

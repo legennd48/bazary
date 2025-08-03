@@ -2,19 +2,21 @@
 Categories views.
 """
 
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
-from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from apps.core.swagger_docs import SwaggerTags, SwaggerResponses, SwaggerExamples
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.response import Response
+
+from apps.core.swagger_docs import SwaggerExamples, SwaggerResponses, SwaggerTags
+
 from .models import Category
 from .serializers import (
+    CategoryCreateSerializer,
     CategorySerializer,
     CategoryTreeSerializer,
-    CategoryCreateSerializer,
 )
 
 

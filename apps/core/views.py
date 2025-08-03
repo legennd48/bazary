@@ -2,10 +2,10 @@
 Core views for health checks and utilities.
 """
 
+from django.core.cache import cache
+from django.db import connections
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db import connections
-from django.core.cache import cache
 
 
 def health_check(request):

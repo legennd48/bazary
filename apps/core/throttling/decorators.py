@@ -3,10 +3,12 @@ Rate limiting decorators for view functions and classes.
 """
 
 from functools import wraps
-from django_ratelimit.decorators import ratelimit
+
 from django.http import JsonResponse
-from rest_framework.response import Response
+
+from django_ratelimit.decorators import ratelimit
 from rest_framework import status
+from rest_framework.response import Response
 
 
 def api_ratelimit(group=None, key="ip", rate="60/h", method="ALL", block=True):

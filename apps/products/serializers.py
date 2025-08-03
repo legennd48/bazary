@@ -2,10 +2,13 @@
 Products serializers.
 """
 
-from rest_framework import serializers
 from decimal import Decimal
-from .models import Product, ProductImage, Tag
+
+from rest_framework import serializers
+
 from apps.categories.serializers import CategorySerializer
+
+from .models import Product, ProductImage, Tag
 
 
 class TagSerializer(serializers.ModelSerializer):

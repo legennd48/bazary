@@ -2,39 +2,42 @@
 Authentication views.
 """
 
-from rest_framework import status, permissions, viewsets
+from django.contrib.auth import get_user_model
+
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView,
 )
-from django.contrib.auth import get_user_model
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from apps.core.swagger_docs import (
-    SwaggerTags,
-    SwaggerResponses,
-    SwaggerExamples,
-    get_testing_instructions_response,
-    get_example_or_fallback,
-)
+
 from apps.core.capture_decorator import capture_for_swagger
 from apps.core.permissions import (
-    UserManagementPermission,
-    ProfilePermission,
     PasswordChangePermission,
+    ProfilePermission,
+    UserManagementPermission,
+)
+from apps.core.swagger_docs import (
+    SwaggerExamples,
+    SwaggerResponses,
+    SwaggerTags,
+    get_example_or_fallback,
+    get_testing_instructions_response,
 )
 from apps.core.throttling.decorators import login_ratelimit, registration_ratelimit
+
 from .models import User
 from .serializers import (
-    UserSerializer,
-    RegisterSerializer,
-    ProfileSerializer,
     ChangePasswordSerializer,
+    ProfileSerializer,
+    RegisterSerializer,
+    UserSerializer,
 )
 
 User = get_user_model()

@@ -2,11 +2,13 @@
 Centralized Swagger documentation configuration and examples.
 """
 
-from drf_yasg import openapi
-import os
 import json
+import os
 from pathlib import Path
+
 from django.conf import settings
+
+from drf_yasg import openapi
 
 
 def get_captured_example(endpoint_name, method, status_code):

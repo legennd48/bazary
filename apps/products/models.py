@@ -2,13 +2,15 @@
 Product models for the e-commerce system.
 """
 
-from django.db import models
-from django.core.validators import MinValueValidator
-from django.utils.text import slugify
 from decimal import Decimal
-from apps.core.models import TimeStampedModel
-from apps.categories.models import Category
+
+from django.core.validators import MinValueValidator
+from django.db import models
+from django.utils.text import slugify
+
 from apps.authentication.models import User
+from apps.categories.models import Category
+from apps.core.models import TimeStampedModel
 
 
 class ProductManager(models.Manager):

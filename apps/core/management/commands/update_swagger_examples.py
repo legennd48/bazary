@@ -2,9 +2,11 @@
 Management command to update Swagger documentation with captured responses.
 """
 
-from django.core.management.base import BaseCommand
-from apps.core.response_capture import response_capture
 import json
+
+from django.core.management.base import BaseCommand
+
+from apps.core.response_capture import response_capture
 
 
 class Command(BaseCommand):

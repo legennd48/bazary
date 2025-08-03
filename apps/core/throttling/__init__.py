@@ -2,13 +2,15 @@
 Custom throttling classes for API rate limiting.
 """
 
+import time
+
+from django.core.cache import cache
+
 from rest_framework.throttling import (
-    UserRateThrottle,
     AnonRateThrottle,
     ScopedRateThrottle,
+    UserRateThrottle,
 )
-from django.core.cache import cache
-import time
 
 
 class BurstRateThrottle(UserRateThrottle):

@@ -2,35 +2,38 @@
 Products views.
 """
 
-from rest_framework import viewsets, permissions, status, filters
+from django.db.models import Q
+
+from django_filters.rest_framework import DjangoFilterBackend
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+
+from apps.core.permissions import IsAdminOrReadOnly
+from apps.core.permissions.product import (
+    ProductBulkOperationPermission,
+    ProductPermission,
+)
 from apps.core.swagger_docs import (
-    SwaggerTags,
-    SwaggerResponses,
     SwaggerExamples,
     SwaggerParameters,
+    SwaggerResponses,
+    SwaggerTags,
     get_testing_instructions_response,
 )
-from apps.core.permissions.product import (
-    ProductPermission,
-    ProductBulkOperationPermission,
-)
-from apps.core.permissions import IsAdminOrReadOnly
-from apps.core.throttling.decorators import search_ratelimit, RateLimitMixin
+from apps.core.throttling.decorators import RateLimitMixin, search_ratelimit
+
+from .filters import ProductFilter
 from .models import Product, Tag
 from .serializers import (
-    ProductListSerializer,
-    ProductDetailSerializer,
     ProductCreateUpdateSerializer,
+    ProductDetailSerializer,
+    ProductListSerializer,
     ProductSearchSerializer,
     TagSerializer,
 )
-from .filters import ProductFilter
 
 
 @swagger_auto_schema(

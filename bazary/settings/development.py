@@ -7,43 +7,44 @@ from .base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
 # Database for development (using SQLite for simplicity)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
 # Development cache configuration
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'bazary-dev-cache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "bazary-dev-cache",
     }
 }
 
 # Add development-specific apps
 INSTALLED_APPS += [
-    'django_extensions',
+    "django_extensions",
 ]
 
 # Add debug toolbar if available
 try:
     import debug_toolbar
-    INSTALLED_APPS += ['debug_toolbar']
-    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-    
+
+    INSTALLED_APPS += ["debug_toolbar"]
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+
     # Debug Toolbar configuration
     INTERNAL_IPS = [
-        '127.0.0.1',
-        'localhost',
+        "127.0.0.1",
+        "localhost",
     ]
-    
+
     DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
+        "SHOW_TOOLBAR_CALLBACK": lambda request: DEBUG,
     }
 except ImportError:
     pass
@@ -55,18 +56,18 @@ SECURE_SSL_REDIRECT = False
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Email backend for development
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Disable caching in development
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
     }
 }
 
 # Static files configuration for development
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 # Logging for development
-LOGGING['root']['level'] = 'DEBUG'
-LOGGING['loggers']['bazary']['level'] = 'DEBUG'
+LOGGING["root"]["level"] = "DEBUG"
+LOGGING["loggers"]["bazary"]["level"] = "DEBUG"

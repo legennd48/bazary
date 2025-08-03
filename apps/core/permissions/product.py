@@ -9,7 +9,7 @@ from rest_framework.permissions import BasePermission
 class ProductPermission(BasePermission):
     """
     Custom permission for product management.
-    
+
     - List/Read: All users (including anonymous)
     - Create/Update/Delete: Admin users only
     - Search/Filter: All users
@@ -19,11 +19,16 @@ class ProductPermission(BasePermission):
         # Allow all users to read products
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Allow search actions for all users
-        if hasattr(view, 'action') and view.action in ['search', 'featured', 'in_stock', 'by_category']:
+        if hasattr(view, "action") and view.action in [
+            "search",
+            "featured",
+            "in_stock",
+            "by_category",
+        ]:
             return True
-        
+
         # Only authenticated admin users can create/update/delete
         return request.user.is_authenticated and request.user.is_staff
 
@@ -31,7 +36,7 @@ class ProductPermission(BasePermission):
         # Allow all users to read individual products
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Only admin users can modify products
         return request.user.is_authenticated and request.user.is_staff
 
@@ -50,14 +55,14 @@ class ProductOwnershipPermission(BasePermission):
         # Read access for all
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Admin can modify any product
         if request.user.is_staff:
             return True
-        
+
         # Future: Product owner can modify their own products
         # return obj.owner == request.user
-        
+
         # For now, only admin can modify
         return False
 
@@ -79,8 +84,8 @@ class ProductAnalyticsPermission(BasePermission):
 
     def has_permission(self, request, view):
         # Basic analytics available to all users
-        if hasattr(view, 'action') and view.action in ['popular', 'trending']:
+        if hasattr(view, "action") and view.action in ["popular", "trending"]:
             return True
-        
+
         # Detailed analytics only for admin users
         return request.user.is_authenticated and request.user.is_staff

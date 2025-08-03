@@ -9,7 +9,7 @@ from rest_framework.permissions import BasePermission
 class UserManagementPermission(BasePermission):
     """
     Permission for user management operations.
-    
+
     - List users: Admin only
     - View profile: Owner or Admin
     - Create user: Admin only (registration is separate)
@@ -19,13 +19,13 @@ class UserManagementPermission(BasePermission):
 
     def has_permission(self, request, view):
         # Registration is handled separately
-        if hasattr(view, 'action') and view.action == 'create':
+        if hasattr(view, "action") and view.action == "create":
             return request.user.is_authenticated and request.user.is_staff
-        
+
         # List users - admin only
-        if hasattr(view, 'action') and view.action == 'list':
+        if hasattr(view, "action") and view.action == "list":
             return request.user.is_authenticated and request.user.is_staff
-        
+
         # Other actions require authentication
         return request.user.is_authenticated
 
@@ -33,7 +33,7 @@ class UserManagementPermission(BasePermission):
         # Admin can access all user objects
         if request.user.is_staff:
             return True
-        
+
         # Users can only access their own profile
         return obj == request.user
 
@@ -51,11 +51,11 @@ class ProfilePermission(BasePermission):
         # Admin can access all profiles
         if request.user.is_staff:
             return True
-        
+
         # Users can only access their own profile
-        if hasattr(obj, 'user'):
+        if hasattr(obj, "user"):
             return obj.user == request.user
-        
+
         return obj == request.user
 
 

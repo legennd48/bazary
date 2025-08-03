@@ -8,8 +8,8 @@ from . import views
 
 # Tags router
 router = DefaultRouter()
-router.register('', views.TagViewSet, basename='tag')
+router.register("", views.TagViewSet, basename="tag")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

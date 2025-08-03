@@ -27,7 +27,7 @@ from drf_yasg import openapi
 schema_view = get_schema_view(
     openapi.Info(
         title="🛒 Bazary E-Commerce API",
-        default_version='v1',
+        default_version="v1",
         description="""
 # Bazary E-Commerce Backend API
 
@@ -74,11 +74,10 @@ API requests are rate-limited to ensure fair usage and optimal performance.
         contact=openapi.Contact(
             name="Bazary API Support",
             email="api-support@bazary.com",
-            url="https://bazary.com/support/"
+            url="https://bazary.com/support/",
         ),
         license=openapi.License(
-            name="MIT License",
-            url="https://opensource.org/licenses/MIT"
+            name="MIT License", url="https://opensource.org/licenses/MIT"
         ),
     ),
     public=True,
@@ -87,23 +86,31 @@ API requests are rate-limited to ensure fair usage and optimal performance.
 
 urlpatterns = [
     # Admin
-    path('admin/', admin.site.urls),
-    
+    path("admin/", admin.site.urls),
     # API URLs v1
-    path('api/v1/', include([
-        path('auth/', include('apps.authentication.urls')),
-        path('categories/', include('apps.categories.urls')),
-        path('products/', include('apps.products.urls')),
-        path('tags/', include('apps.products.tag_urls')),  # Tags at root level
-    ])),
-    
+    path(
+        "api/v1/",
+        include(
+            [
+                path("auth/", include("apps.authentication.urls")),
+                path("categories/", include("apps.categories.urls")),
+                path("products/", include("apps.products.urls")),
+                path("tags/", include("apps.products.tag_urls")),  # Tags at root level
+            ]
+        ),
+    ),
     # API Documentation
-    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    
+    path(
+        "swagger<format>/", schema_view.without_ui(cache_timeout=0), name="schema-json"
+    ),
+    path(
+        "swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     # Health check
-    path('health/', include('apps.core.urls')),
+    path("health/", include("apps.core.urls")),
 ]
 
 # Serve media files in development

@@ -10,65 +10,80 @@ from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from apps.core.swagger_docs import (
-    SwaggerTags, SwaggerResponses, SwaggerExamples, 
-    SwaggerParameters, get_testing_instructions_response
+    SwaggerTags,
+    SwaggerResponses,
+    SwaggerExamples,
+    SwaggerParameters,
+    get_testing_instructions_response,
 )
-from apps.core.permissions.product import ProductPermission, ProductBulkOperationPermission
+from apps.core.permissions.product import (
+    ProductPermission,
+    ProductBulkOperationPermission,
+)
 from apps.core.permissions import IsAdminOrReadOnly
 from apps.core.throttling.decorators import search_ratelimit, RateLimitMixin
 from .models import Product, Tag
 from .serializers import (
-    ProductListSerializer, ProductDetailSerializer,
-    ProductCreateUpdateSerializer, ProductSearchSerializer,
-    TagSerializer
+    ProductListSerializer,
+    ProductDetailSerializer,
+    ProductCreateUpdateSerializer,
+    ProductSearchSerializer,
+    TagSerializer,
 )
 from .filters import ProductFilter
 
 
 @swagger_auto_schema(
     tags=[SwaggerTags.PRODUCTS],
-    operation_description="Product management endpoints with CRUD operations, filtering, and search capabilities."
+    operation_description="Product management endpoints with CRUD operations, filtering, and search capabilities.",
 )
 class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
     """
     ## Product Management API
-    
+
     Comprehensive product management system with the following features:
-    
+
     ### 🛍️ Core Operations
     - **List Products**: Get paginated list of products with filtering
     - **Product Details**: Get detailed information about a specific product
     - **Create Product**: Add new products (Admin only)
     - **Update Product**: Modify existing products (Admin only)
     - **Delete Product**: Remove products (Admin only)
-    
+
     ### 🔍 Advanced Features
     - **Search**: Multi-field text search across name, description, and SKU
     - **Filtering**: Filter by category, price range, stock status, featured status
     - **Sorting**: Sort by name, price, creation date, stock quantity
     - **Pagination**: Efficient handling of large product catalogs
-    
+
     ### 🎯 Special Endpoints
     - **Featured Products**: Get products marked as featured
     - **Stock Management**: Update product inventory levels
     - **In-Stock Products**: Get only products currently in stock
-    
+
     ### 🔐 Permissions
     - **Public Access**: List, detail, search, featured products
     - **Admin Only**: Create, update, delete, stock management
-    
+
     ### 📊 Performance
     - Optimized queries with select_related and prefetch_related
     - Database indexes for efficient filtering and searching
     - Pagination to handle large datasets
     """
-    queryset = Product.objects.select_related('category', 'created_by').prefetch_related('tags', 'images')
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+
+    queryset = Product.objects.select_related(
+        "category", "created_by"
+    ).prefetch_related("tags", "images")
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
     filterset_class = ProductFilter
-    search_fields = ['name', 'description', 'short_description', 'sku']
-    ordering_fields = ['name', 'price', 'created_at', 'stock_quantity']
-    ordering = ['-created_at']
-    
+    search_fields = ["name", "description", "short_description", "sku"]
+    ordering_fields = ["name", "price", "created_at", "stock_quantity"]
+    ordering = ["-created_at"]
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="List Products",
@@ -93,17 +108,17 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
                         "count": 150,
                         "next": "http://localhost:8000/api/v1/products/?page=2",
                         "previous": None,
-                        "results": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE]
+                        "results": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE],
                     }
-                }
+                },
             ),
-            **SwaggerResponses.standard_crud()
-        }
+            **SwaggerResponses.standard_crud(),
+        },
     )
     def list(self, request, *args, **kwargs):
         """List products with filtering and pagination."""
         return super().list(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Get Product Details",
@@ -112,15 +127,15 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
             200: openapi.Response(
                 "Product details retrieved successfully",
                 ProductDetailSerializer,
-                examples={"application/json": SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE}
+                examples={"application/json": SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE},
             ),
-            **SwaggerResponses.standard_crud()
-        }
+            **SwaggerResponses.standard_crud(),
+        },
     )
     def retrieve(self, request, *args, **kwargs):
         """Get detailed product information."""
         return super().retrieve(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Create Product",
@@ -128,34 +143,58 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'name': openapi.Schema(type=openapi.TYPE_STRING, description='Product name'),
-                'description': openapi.Schema(type=openapi.TYPE_STRING, description='Detailed description'),
-                'short_description': openapi.Schema(type=openapi.TYPE_STRING, description='Brief description'),
-                'price': openapi.Schema(type=openapi.TYPE_STRING, description='Product price'),
-                'category': openapi.Schema(type=openapi.TYPE_INTEGER, description='Category ID'),
-                'sku': openapi.Schema(type=openapi.TYPE_STRING, description='Stock Keeping Unit'),
-                'stock_quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description='Stock quantity'),
-                'track_inventory': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enable inventory tracking'),
-                'is_featured': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Mark as featured'),
-                'is_active': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Product is active'),
-                'tags': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_INTEGER), description='Tag IDs'),
+                "name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Product name"
+                ),
+                "description": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Detailed description"
+                ),
+                "short_description": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Brief description"
+                ),
+                "price": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Product price"
+                ),
+                "category": openapi.Schema(
+                    type=openapi.TYPE_INTEGER, description="Category ID"
+                ),
+                "sku": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Stock Keeping Unit"
+                ),
+                "stock_quantity": openapi.Schema(
+                    type=openapi.TYPE_INTEGER, description="Stock quantity"
+                ),
+                "track_inventory": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN, description="Enable inventory tracking"
+                ),
+                "is_featured": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN, description="Mark as featured"
+                ),
+                "is_active": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN, description="Product is active"
+                ),
+                "tags": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(type=openapi.TYPE_INTEGER),
+                    description="Tag IDs",
+                ),
             },
-            required=['name', 'description', 'price', 'category'],
-            example=SwaggerExamples.PRODUCT_CREATE_EXAMPLE
+            required=["name", "description", "price", "category"],
+            example=SwaggerExamples.PRODUCT_CREATE_EXAMPLE,
         ),
         responses={
             201: openapi.Response(
                 "Product created successfully",
                 ProductDetailSerializer,
-                examples={"application/json": SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE}
+                examples={"application/json": SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE},
             ),
-            **SwaggerResponses.standard_crud()
-        }
+            **SwaggerResponses.standard_crud(),
+        },
     )
     def create(self, request, *args, **kwargs):
         """Create a new product."""
         return super().create(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Update Product",
@@ -163,16 +202,15 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         request_body=ProductCreateUpdateSerializer,
         responses={
             200: openapi.Response(
-                "Product updated successfully",
-                ProductDetailSerializer
+                "Product updated successfully", ProductDetailSerializer
             ),
-            **SwaggerResponses.standard_crud()
-        }
+            **SwaggerResponses.standard_crud(),
+        },
     )
     def update(self, request, *args, **kwargs):
         """Update a product."""
         return super().update(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Partial Update Product",
@@ -180,24 +218,23 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         request_body=ProductCreateUpdateSerializer,
         responses={
             200: openapi.Response(
-                "Product updated successfully",
-                ProductDetailSerializer
+                "Product updated successfully", ProductDetailSerializer
             ),
-            **SwaggerResponses.standard_crud()
-        }
+            **SwaggerResponses.standard_crud(),
+        },
     )
     def partial_update(self, request, *args, **kwargs):
         """Partially update a product."""
         return super().partial_update(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Delete Product",
         operation_description="Delete an existing product (Admin only)",
         responses={
             204: openapi.Response("Product deleted successfully"),
-            **SwaggerResponses.standard_crud()
-        }
+            **SwaggerResponses.standard_crud(),
+        },
     )
     def destroy(self, request, *args, **kwargs):
         """Delete a product."""
@@ -205,34 +242,34 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Set permissions based on action."""
-        if self.action in ['list', 'retrieve', 'search', 'featured', 'in_stock']:
+        if self.action in ["list", "retrieve", "search", "featured", "in_stock"]:
             permission_classes = [ProductPermission]
         else:
             permission_classes = [ProductPermission]
         return [permission() for permission in permission_classes]
-    
+
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
-        if self.action == 'list':
+        if self.action == "list":
             return ProductListSerializer
-        elif self.action == 'retrieve':
+        elif self.action == "retrieve":
             return ProductDetailSerializer
-        elif self.action in ['create', 'update', 'partial_update']:
+        elif self.action in ["create", "update", "partial_update"]:
             return ProductCreateUpdateSerializer
-        elif self.action == 'search':
+        elif self.action == "search":
             return ProductSearchSerializer
         return ProductDetailSerializer
-    
+
     def get_queryset(self):
         """Filter queryset based on permissions."""
         queryset = self.queryset
-        
+
         # For non-admin users, only show active products
         if not (self.request.user.is_authenticated and self.request.user.is_staff):
             queryset = queryset.filter(is_active=True)
-        
+
         return queryset
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Search Products",
@@ -268,51 +305,51 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
                         "count": 25,
                         "next": None,
                         "previous": None,
-                        "results": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE]
+                        "results": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE],
                     }
-                }
+                },
             ),
             400: openapi.Response("Invalid search parameters"),
-        }
+        },
     )
-    @action(detail=False, methods=['get'])
-    @search_ratelimit(rate='30/m')
+    @action(detail=False, methods=["get"])
+    @search_ratelimit(rate="30/m")
     def search(self, request):
         """Advanced product search."""
         queryset = self.get_queryset()
-        
+
         # Text search
-        query = request.query_params.get('q', '')
+        query = request.query_params.get("q", "")
         if query:
             queryset = queryset.filter(
-                Q(name__icontains=query) |
-                Q(description__icontains=query) |
-                Q(short_description__icontains=query) |
-                Q(tags__name__icontains=query)
+                Q(name__icontains=query)
+                | Q(description__icontains=query)
+                | Q(short_description__icontains=query)
+                | Q(tags__name__icontains=query)
             ).distinct()
-        
+
         # Category filter
-        category_id = request.query_params.get('category')
+        category_id = request.query_params.get("category")
         if category_id:
             queryset = queryset.filter(category_id=category_id)
-        
+
         # Price range filter
-        price_min = request.query_params.get('price_min')
-        price_max = request.query_params.get('price_max')
+        price_min = request.query_params.get("price_min")
+        price_max = request.query_params.get("price_max")
         if price_min:
             queryset = queryset.filter(price__gte=price_min)
         if price_max:
             queryset = queryset.filter(price__lte=price_max)
-        
+
         # Apply pagination
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Get Featured Products",
@@ -344,25 +381,29 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
                         "count": 8,
                         "next": None,
                         "previous": None,
-                        "results": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE]
+                        "results": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE],
                     }
-                }
+                },
             )
-        }
+        },
     )
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def featured(self, request):
         """Get featured products."""
         queryset = self.get_queryset().filter(is_featured=True)
-        
+
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = ProductListSerializer(page, many=True, context={'request': request})
+            serializer = ProductListSerializer(
+                page, many=True, context={"request": request}
+            )
             return self.get_paginated_response(serializer.data)
-        
-        serializer = ProductListSerializer(queryset, many=True, context={'request': request})
+
+        serializer = ProductListSerializer(
+            queryset, many=True, context={"request": request}
+        )
         return Response(serializer.data)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Get In-Stock Products",
@@ -394,27 +435,31 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
                         "count": 120,
                         "next": "http://localhost:8000/api/v1/products/in_stock/?page=2",
                         "previous": None,
-                        "results": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE]
+                        "results": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE],
                     }
-                }
+                },
             )
-        }
+        },
     )
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def in_stock(self, request):
         """Get products that are in stock."""
         queryset = self.get_queryset().filter(
             Q(track_inventory=False) | Q(stock_quantity__gt=0)
         )
-        
+
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = ProductListSerializer(page, many=True, context={'request': request})
+            serializer = ProductListSerializer(
+                page, many=True, context={"request": request}
+            )
             return self.get_paginated_response(serializer.data)
-        
-        serializer = ProductListSerializer(queryset, many=True, context={'request': request})
+
+        serializer = ProductListSerializer(
+            queryset, many=True, context={"request": request}
+        )
         return Response(serializer.data)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Update Product Stock",
@@ -441,15 +486,15 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'quantity': openapi.Schema(
+                "quantity": openapi.Schema(
                     type=openapi.TYPE_INTEGER,
-                    description='New stock quantity (must be non-negative)',
+                    description="New stock quantity (must be non-negative)",
                     minimum=0,
-                    example=25
+                    example=25,
                 )
             },
-            required=['quantity'],
-            example={"quantity": 25}
+            required=["quantity"],
+            example={"quantity": 25},
         ),
         responses={
             200: openapi.Response(
@@ -460,9 +505,9 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
                         "product_id": 1,
                         "new_quantity": 25,
                         "is_in_stock": True,
-                        "is_low_stock": False
+                        "is_low_stock": False,
                     }
-                }
+                },
             ),
             400: openapi.Response(
                 "Invalid quantity",
@@ -470,45 +515,50 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
                     "application/json": {
                         "error": "Quantity must be a non-negative integer"
                     }
-                }
+                },
             ),
             401: openapi.Response("Unauthorized - Admin access required"),
-            404: openapi.Response("Product not found")
-        }
+            404: openapi.Response("Product not found"),
+        },
     )
-    @action(detail=True, methods=['post'], permission_classes=[ProductBulkOperationPermission])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[ProductBulkOperationPermission],
+    )
     def update_stock(self, request, pk=None):
         """Update product stock quantity."""
         product = self.get_object()
-        quantity = request.data.get('quantity')
-        
+        quantity = request.data.get("quantity")
+
         if quantity is None:
             return Response(
-                {'error': 'Quantity is required'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Quantity is required"}, status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         try:
             quantity = int(quantity)
             if quantity < 0:
                 raise ValueError()
         except (ValueError, TypeError):
             return Response(
-                {'error': 'Quantity must be a non-negative integer'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Quantity must be a non-negative integer"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         product.stock_quantity = quantity
         product.save()
-        
-        return Response({
-            'message': 'Stock updated successfully',
-            'product_id': product.id,
-            'new_quantity': quantity,
-            'is_in_stock': product.is_in_stock,
-            'is_low_stock': product.is_low_stock
-        })
-    
+
+        return Response(
+            {
+                "message": "Stock updated successfully",
+                "product_id": product.id,
+                "new_quantity": quantity,
+                "is_in_stock": product.is_in_stock,
+                "is_low_stock": product.is_low_stock,
+            }
+        )
+
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Get Testing Instructions",
@@ -529,64 +579,65 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         - **Error Handling**
         - **Performance Testing**
         """,
-        responses={
-            200: get_testing_instructions_response('products')
-        }
+        responses={200: get_testing_instructions_response("products")},
     )
-    @action(detail=False, methods=['get'], url_path='testing-instructions')
+    @action(detail=False, methods=["get"], url_path="testing-instructions")
     def testing_instructions(self, request):
         """Get comprehensive testing instructions for Products API."""
         from apps.core.swagger_docs import TestingInstructions
-        
-        return Response({
-            'title': 'Products API Testing Instructions',
-            'instructions': TestingInstructions.PRODUCTS_TESTING,
-            'format': 'markdown',
-            'last_updated': '2025-01-28'
-        })
+
+        return Response(
+            {
+                "title": "Products API Testing Instructions",
+                "instructions": TestingInstructions.PRODUCTS_TESTING,
+                "format": "markdown",
+                "last_updated": "2025-01-28",
+            }
+        )
 
 
 @swagger_auto_schema(
     tags=[SwaggerTags.TAGS],
-    operation_description="Tag management endpoints for organizing products."
+    operation_description="Tag management endpoints for organizing products.",
 )
 class TagViewSet(viewsets.ModelViewSet):
     """
     ## Tag Management API
-    
+
     Simple tag system for organizing and categorizing products.
-    
+
     ### 🏷️ Core Operations
     - **List Tags**: Get all available tags
     - **Tag Details**: Get information about a specific tag
     - **Create Tag**: Add new tags (Admin only)
     - **Update Tag**: Modify existing tags (Admin only)
     - **Delete Tag**: Remove tags (Admin only)
-    
+
     ### 🔍 Features
     - **Search**: Search tags by name
     - **Sorting**: Sort by name or creation date
     - **Public Access**: Anyone can view tags
     - **Admin Management**: Only admins can modify tags
-    
+
     ### 🔗 Product Integration
     - Tags can be assigned to multiple products
     - Products can have multiple tags
     - Used for filtering and categorization
     - Enhances search functionality
-    
+
     ### 🔐 Permissions
     - **Public Access**: List and detail views
     - **Admin Only**: Create, update, delete operations
     """
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name']
-    ordering_fields = ['name', 'created_at']
-    ordering = ['name']
-    
+    search_fields = ["name"]
+    ordering_fields = ["name", "created_at"]
+    ordering = ["name"]
+
     @swagger_auto_schema(
         tags=[SwaggerTags.TAGS],
         operation_summary="List Tags",
@@ -603,18 +654,30 @@ class TagViewSet(viewsets.ModelViewSet):
                 TagSerializer(many=True),
                 examples={
                     "application/json": [
-                        {"id": 1, "name": "wireless", "description": "Wireless technology products"},
-                        {"id": 2, "name": "premium", "description": "Premium quality products"},
-                        {"id": 3, "name": "electronics", "description": "Electronic devices"}
+                        {
+                            "id": 1,
+                            "name": "wireless",
+                            "description": "Wireless technology products",
+                        },
+                        {
+                            "id": 2,
+                            "name": "premium",
+                            "description": "Premium quality products",
+                        },
+                        {
+                            "id": 3,
+                            "name": "electronics",
+                            "description": "Electronic devices",
+                        },
                     ]
-                }
+                },
             )
-        }
+        },
     )
     def list(self, request, *args, **kwargs):
         """List all tags with optional search and sorting."""
         return super().list(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.TAGS],
         operation_summary="Get Tag Details",
@@ -623,17 +686,15 @@ class TagViewSet(viewsets.ModelViewSet):
             200: openapi.Response(
                 "Tag details retrieved successfully",
                 TagSerializer,
-                examples={
-                    "application/json": SwaggerExamples.TAG_CREATE_EXAMPLE
-                }
+                examples={"application/json": SwaggerExamples.TAG_CREATE_EXAMPLE},
             ),
-            404: openapi.Response("Tag not found")
-        }
+            404: openapi.Response("Tag not found"),
+        },
     )
     def retrieve(self, request, *args, **kwargs):
         """Get detailed tag information."""
         return super().retrieve(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.TAGS],
         operation_summary="Create Tag",
@@ -641,26 +702,30 @@ class TagViewSet(viewsets.ModelViewSet):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'name': openapi.Schema(type=openapi.TYPE_STRING, description='Tag name'),
-                'description': openapi.Schema(type=openapi.TYPE_STRING, description='Tag description'),
+                "name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Tag name"
+                ),
+                "description": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Tag description"
+                ),
             },
-            required=['name'],
-            example=SwaggerExamples.TAG_CREATE_EXAMPLE
+            required=["name"],
+            example=SwaggerExamples.TAG_CREATE_EXAMPLE,
         ),
         responses={
             201: openapi.Response(
                 "Tag created successfully",
                 TagSerializer,
-                examples={"application/json": SwaggerExamples.TAG_CREATE_EXAMPLE}
+                examples={"application/json": SwaggerExamples.TAG_CREATE_EXAMPLE},
             ),
             400: openapi.Response("Validation error"),
-            401: openapi.Response("Unauthorized - Admin access required")
-        }
+            401: openapi.Response("Unauthorized - Admin access required"),
+        },
     )
     def create(self, request, *args, **kwargs):
         """Create a new tag."""
         return super().create(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.TAGS],
         operation_summary="Update Tag",
@@ -670,13 +735,13 @@ class TagViewSet(viewsets.ModelViewSet):
             200: openapi.Response("Tag updated successfully", TagSerializer),
             400: openapi.Response("Validation error"),
             401: openapi.Response("Unauthorized - Admin access required"),
-            404: openapi.Response("Tag not found")
-        }
+            404: openapi.Response("Tag not found"),
+        },
     )
     def update(self, request, *args, **kwargs):
         """Update a tag."""
         return super().update(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         tags=[SwaggerTags.TAGS],
         operation_summary="Delete Tag",
@@ -684,8 +749,8 @@ class TagViewSet(viewsets.ModelViewSet):
         responses={
             204: openapi.Response("Tag deleted successfully"),
             401: openapi.Response("Unauthorized - Admin access required"),
-            404: openapi.Response("Tag not found")
-        }
+            404: openapi.Response("Tag not found"),
+        },
     )
     def destroy(self, request, *args, **kwargs):
         """Delete a tag."""

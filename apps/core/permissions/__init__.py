@@ -10,24 +10,24 @@ from rest_framework.permissions import BasePermission
 
 # Import permission classes from submodules
 from .user import (
-    UserManagementPermission, 
-    ProfilePermission, 
+    UserManagementPermission,
+    ProfilePermission,
     PasswordChangePermission,
     UserRolePermission,
-    UserActivationPermission
+    UserActivationPermission,
 )
 from .product import (
     ProductPermission,
     ProductOwnershipPermission,
     ProductBulkOperationPermission,
-    ProductAnalyticsPermission
+    ProductAnalyticsPermission,
 )
 from .mixins import (
     OwnershipMixin,
     AdminAccessMixin,
     ReadOnlyMixin,
     AuthenticationMixin,
-    CombinedPermissionMixin
+    CombinedPermissionMixin,
 )
 
 
@@ -84,9 +84,9 @@ class IsAdminOrOwner(BasePermission):
         # Admin can access everything
         if request.user.is_staff:
             return True
-        
+
         # Owner can access their own objects
-        return hasattr(obj, 'owner') and obj.owner == request.user
+        return hasattr(obj, "owner") and obj.owner == request.user
 
 
 class IsAuthenticatedOrReadOnly(BasePermission):
@@ -121,13 +121,13 @@ class IsStaffOrOwner(BasePermission):
         # Staff can access everything
         if request.user.is_staff:
             return True
-        
+
         # Owner can access their own objects
-        if hasattr(obj, 'user'):
+        if hasattr(obj, "user"):
             return obj.user == request.user
-        elif hasattr(obj, 'owner'):
+        elif hasattr(obj, "owner"):
             return obj.owner == request.user
-        elif hasattr(obj, 'created_by'):
+        elif hasattr(obj, "created_by"):
             return obj.created_by == request.user
-        
+
         return False

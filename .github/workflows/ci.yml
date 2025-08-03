@@ -62,7 +62,7 @@ jobs:
         black apps/ --check --diff
         
     - name: Upload security report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-report
@@ -127,20 +127,20 @@ jobs:
         
     - name: Set up test environment
       run: |
-        cp .env.example .env.testing
-        echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/test_bazary" >> .env.testing
-        echo "REDIS_URL=redis://localhost:6379/0" >> .env.testing
+        cp .env.example .env
+        echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/test_bazary" >> .env
+        echo "REDIS_URL=redis://localhost:6379/0" >> .env
         
     - name: Run migrations
       run: |
-        python manage.py migrate --settings=config.settings.testing
+        python manage.py migrate --settings=bazary.settings.testing
         
     - name: Run ${{ matrix.test-type }} tests
       run: |
         pytest -m ${{ matrix.test-type }} --cov=apps --cov-report=xml --cov-report=term-missing
         
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
         flags: ${{ matrix.test-type }}
@@ -169,7 +169,7 @@ jobs:
         
     - name: Generate API documentation
       run: |
-        python manage.py spectacular --file api-schema.yml --settings=config.settings.development
+        python manage.py spectacular --file api-schema.yml --settings=bazary.settings.development
         
     - name: Validate API schema
       run: |
@@ -177,7 +177,7 @@ jobs:
         openapi-spec-validator api-schema.yml
         
     - name: Upload API schema
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: api-schema
         path: api-schema.yml

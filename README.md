@@ -41,10 +41,13 @@ Bazary is a robust, scalable Django-based e-commerce backend system designed for
 
 ## 🚀 Quick Start
 
+## 🚀 Quick Start
+
 ### Prerequisites
-- Docker & Docker Compose
-- Git
-- Python 3.11+ (for local development)
+- Python 3.11+
+- PostgreSQL 13+
+- Redis 6+
+- Docker & Docker Compose (for production deployment)
 
 ### 1. Clone and Setup
 

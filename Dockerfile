@@ -24,8 +24,9 @@ WORKDIR /app
 # Development stage
 FROM base as development
 
+# Copy requirements first
+COPY requirements/ /app/requirements/
 # Install development dependencies
-COPY requirements/development.txt /app/requirements/
 RUN pip install -r requirements/development.txt
 
 # Copy project
@@ -44,19 +45,24 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 # Production stage
 FROM base as production
 
+# Copy requirements first
+COPY requirements/ /app/requirements/
 # Install production dependencies
-COPY requirements/production.txt /app/requirements/
 RUN pip install -r requirements/production.txt
 
 # Copy project
 COPY . /app/
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
+# Create necessary directories and set environment
+RUN mkdir -p /app/staticfiles && \
+    mkdir -p /app/media
 
-# Change ownership and switch to non-root user
+# Change ownership first, then switch user
 RUN chown -R appuser:appuser /app
 USER appuser
+
+# Collect static files (will be done at runtime with proper env vars)
+# RUN python manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8000

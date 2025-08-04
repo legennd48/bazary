@@ -240,6 +240,8 @@ SWAGGER_SETTINGS = {
     "SUPPORTED_SUBMIT_METHODS": ["get", "post", "put", "delete", "patch"],
 }
 
+SWAGGER_USE_COMPAT_RENDERERS = False
+
 REDOC_SETTINGS = {
     "LAZY_RENDERING": False,
 }

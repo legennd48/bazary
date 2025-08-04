@@ -43,6 +43,13 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # Media files
 MEDIA_ROOT = "/tmp/bazary_ci_media"
 
+# Static files
+STATIC_ROOT = "/tmp/bazary_ci_static"
+STATICFILES_DIRS = []
+
+# Swagger settings
+SWAGGER_USE_COMPAT_RENDERERS = False
+
 # Secret key for testing
 SECRET_KEY = "ci-test-secret-key-only-for-testing"
 

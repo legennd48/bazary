@@ -161,6 +161,7 @@ AUTH_USER_MODEL = "authentication.User"
 
 # Django REST Framework
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -353,3 +354,13 @@ if not DEBUG:
 API_SECURITY_ENABLED = config("API_SECURITY_ENABLED", default=True, cast=bool)
 API_REQUEST_SANITIZATION = config("API_REQUEST_SANITIZATION", default=True, cast=bool)
 API_SECURITY_LOGGING = config("API_SECURITY_LOGGING", default=True, cast=bool)
+
+# DRF Spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Bazary API',
+    'DESCRIPTION': 'A comprehensive e-commerce API built with Django REST Framework',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': r'/api/v[0-9]',
+}

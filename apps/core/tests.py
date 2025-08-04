@@ -17,15 +17,15 @@ def test_basic_unit_functionality():
 @pytest.mark.integration
 class HealthCheckIntegrationTestCase(TestCase):
     """Integration tests for health check endpoints."""
-    
+
     def setUp(self):
         self.client = APIClient()
-        
+
     def test_health_check_endpoint(self):
         """Test health check endpoint exists."""
         # Simple test that checks if the URL pattern exists
         try:
-            url = reverse('health-check')
+            url = reverse("health-check")
             # If we get here, the URL pattern exists
             self.assertTrue(True)
         except:
@@ -33,14 +33,15 @@ class HealthCheckIntegrationTestCase(TestCase):
             self.skipTest("Health check URL not configured yet")
 
 
-@pytest.mark.api  
+@pytest.mark.api
 def test_api_basic_functionality():
     """API test for basic functionality."""
     # Simple API test that doesn't require database setup
     from rest_framework.test import APIClient
+
     client = APIClient()
-    
+
     # Test that we can create an API client
     assert client is not None
-    assert hasattr(client, 'get')
-    assert hasattr(client, 'post')
+    assert hasattr(client, "get")
+    assert hasattr(client, "post")

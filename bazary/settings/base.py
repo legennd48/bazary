@@ -46,6 +46,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_filters",
     "drf_yasg",
+    "drf_spectacular",
     # 'django_ratelimit',  # TODO: Enable once Redis is configured
 ]
 

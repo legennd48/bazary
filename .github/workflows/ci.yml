@@ -74,6 +74,7 @@ jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     
     services:
       postgres:
@@ -102,6 +103,8 @@ jobs:
     strategy:
       matrix:
         test-type: [unit, integration, api]
+      fail-fast: false
+      max-parallel: 1
         
     steps:
     - name: Checkout code
@@ -133,7 +136,7 @@ jobs:
         
     - name: Run migrations
       run: |
-        python manage.py migrate --settings=bazary.settings.testing
+        python manage.py migrate --settings=bazary.settings.ci
         
     - name: Run ${{ matrix.test-type }} tests
       run: |

@@ -9,13 +9,24 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
-# Database for development (using SQLite for simplicity)
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Database for development - use PostgreSQL in Docker or SQLite locally
+import os
+from decouple import config
+
+if config('DATABASE_URL', default=None):
+    # Use PostgreSQL when DATABASE_URL is provided (Docker environment)
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(config('DATABASE_URL'))
     }
-}
+else:
+    # Use SQLite for local development
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # Development cache configuration
 CACHES = {

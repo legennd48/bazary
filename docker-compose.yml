@@ -45,7 +45,9 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
-      - "8000:8000"
+      - "8001:8000"  # Map to port 8001 for development deployment
+    env_file:
+      - .env.development
     environment:
       - DJANGO_SETTINGS_MODULE=bazary.settings.development
       - DATABASE_URL=postgres://bazary_user:bazary_dev_password@db:5432/bazary_dev

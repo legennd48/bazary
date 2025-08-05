@@ -304,8 +304,13 @@ LOGGING = {
     },
 }
 
-# Create logs directory if it doesn't exist
-os.makedirs(BASE_DIR / "logs", exist_ok=True)
+# Create logs directory if it doesn't exist and we have permission
+try:
+    os.makedirs(BASE_DIR / "logs", exist_ok=True)
+except PermissionError:
+    # In Docker environments, logs directory should be created during build
+    # If we can't create it here, it should already exist
+    pass
 
 # =============================================================================
 # SECURITY SETTINGS

@@ -7,7 +7,8 @@ from .base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
+# Use ALLOWED_HOSTS from base.py (which reads from environment variable)
+# Don't override it here so environment variables work properly
 
 # Database for development - use PostgreSQL in Docker or SQLite locally
 import os

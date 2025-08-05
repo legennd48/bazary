@@ -57,7 +57,8 @@ class ResponseCapture:
 
         # Save to file (only if not in DEBUG mode to avoid permission issues)
         from django.conf import settings
-        if not getattr(settings, 'DEBUG', False):
+
+        if not getattr(settings, "DEBUG", False):
             filename = f"{endpoint_name}_{method.lower()}_{response.status_code}.json"
             filepath = self.examples_dir / filename
 

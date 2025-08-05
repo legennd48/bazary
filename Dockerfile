@@ -32,10 +32,11 @@ RUN pip install -r requirements/development.txt
 # Copy project
 COPY . /app/
 
-# Create necessary directories and set permissions
+# Create necessary directories and files with proper permissions
 RUN mkdir -p /app/logs && \
     mkdir -p /app/staticfiles && \
-    mkdir -p /app/media
+    mkdir -p /app/media && \
+    touch /app/logs/django.log
 
 # Change ownership of the app directory
 RUN chown -R appuser:appuser /app
@@ -58,10 +59,11 @@ RUN pip install -r requirements/production.txt
 # Copy project
 COPY . /app/
 
-# Create necessary directories and set permissions
+# Create necessary directories and files with proper permissions
 RUN mkdir -p /app/logs && \
     mkdir -p /app/staticfiles && \
-    mkdir -p /app/media
+    mkdir -p /app/media && \
+    touch /app/logs/django.log
 
 # Change ownership first, then switch user
 RUN chown -R appuser:appuser /app

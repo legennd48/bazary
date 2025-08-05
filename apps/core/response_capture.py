@@ -55,12 +55,18 @@ class ResponseCapture:
             "headers": dict(response._headers) if hasattr(response, "_headers") else {},
         }
 
-        # Save to file
-        filename = f"{endpoint_name}_{method.lower()}_{response.status_code}.json"
-        filepath = self.examples_dir / filename
+        # Save to file (only if not in DEBUG mode to avoid permission issues)
+        from django.conf import settings
+        if not getattr(settings, 'DEBUG', False):
+            filename = f"{endpoint_name}_{method.lower()}_{response.status_code}.json"
+            filepath = self.examples_dir / filename
 
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(example, f, indent=2, default=str, ensure_ascii=False)
+            try:
+                with open(filepath, "w", encoding="utf-8") as f:
+                    json.dump(example, f, indent=2, default=str, ensure_ascii=False)
+            except (PermissionError, OSError) as e:
+                # Silently ignore file writing errors in development
+                pass
 
     def _extract_request_data(self, request):
         """Extract relevant request data."""

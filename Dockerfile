@@ -32,6 +32,11 @@ RUN pip install -r requirements/development.txt
 # Copy project
 COPY . /app/
 
+# Create necessary directories and set permissions
+RUN mkdir -p /app/logs && \
+    mkdir -p /app/staticfiles && \
+    mkdir -p /app/media
+
 # Change ownership of the app directory
 RUN chown -R appuser:appuser /app
 USER appuser
@@ -53,8 +58,9 @@ RUN pip install -r requirements/production.txt
 # Copy project
 COPY . /app/
 
-# Create necessary directories and set environment
-RUN mkdir -p /app/staticfiles && \
+# Create necessary directories and set permissions
+RUN mkdir -p /app/logs && \
+    mkdir -p /app/staticfiles && \
     mkdir -p /app/media
 
 # Change ownership first, then switch user

@@ -57,7 +57,9 @@ try:
     DEBUG_TOOLBAR_CONFIG = {
         "SHOW_TOOLBAR_CALLBACK": lambda request: DEBUG,
     }
+    
 except ImportError:
+    # Debug toolbar not available, skip it
     pass
 
 # Security settings for development - disable HTTPS redirect

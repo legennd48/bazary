@@ -36,6 +36,7 @@ COPY . /app/
 RUN mkdir -p /app/logs && \
     mkdir -p /app/staticfiles && \
     mkdir -p /app/media && \
+    mkdir -p /app/static && \
     touch /app/logs/django.log
 
 # Change ownership of the app directory
@@ -63,6 +64,7 @@ COPY . /app/
 RUN mkdir -p /app/logs && \
     mkdir -p /app/staticfiles && \
     mkdir -p /app/media && \
+    mkdir -p /app/static && \
     touch /app/logs/django.log
 
 # Change ownership first, then switch user

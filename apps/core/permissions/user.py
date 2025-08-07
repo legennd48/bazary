@@ -95,3 +95,96 @@ class UserActivationPermission(BasePermission):
     def has_permission(self, request, view):
         # Only admin users can activate/deactivate accounts
         return request.user.is_authenticated and request.user.is_staff
+
+
+class IsAdminOrStaff(BasePermission):
+    """
+    Permission for admin and staff users only.
+    """
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and (
+            request.user.is_staff
+            or request.user.has_role("admin")
+            or request.user.has_role("super_admin")
+        )
+
+
+class EnhancedProfilePermission(BasePermission):
+    """
+    Enhanced permission for profile operations with role-based access.
+    """
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        # Super admin can access everything
+        if request.user.has_role("super_admin"):
+            return True
+
+        # Admin can access all profiles for management
+        if (
+            request.user.has_role("admin")
+            and request.method in permissions.SAFE_METHODS
+        ):
+            return True
+
+        # Staff can view profiles but not modify
+        if (
+            request.user.has_role("staff")
+            and request.method in permissions.SAFE_METHODS
+        ):
+            return True
+
+        # Users can access their own profile
+        if hasattr(obj, "user"):
+            return obj.user == request.user
+
+        return obj == request.user
+
+
+class UserAddressPermission(BasePermission):
+    """
+    Permission for user address management.
+    """
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        # Admin can view all addresses
+        if request.user.is_staff and request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Users can only access their own addresses
+        return obj.user == request.user
+
+
+class UserActivityPermission(BasePermission):
+    """
+    Permission for user activity tracking.
+    """
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        # Admin can view all activities
+        if request.user.is_staff:
+            return True
+
+        # Users can only view their own activities
+        return obj.user == request.user
+
+
+class BulkUserActionPermission(BasePermission):
+    """
+    Permission for bulk user operations.
+    """
+
+    def has_permission(self, request, view):
+        # Only admin and super admin can perform bulk actions
+        return request.user.is_authenticated and (
+            request.user.has_role("admin") or request.user.has_role("super_admin")
+        )

@@ -371,3 +371,35 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
     'SCHEMA_PATH_PREFIX': r'/api/v[0-9]',
 }
+
+# Email Configuration
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND", 
+    default="django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = config("EMAIL_HOST", default="localhost")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@bazary.com")
+
+# Site Configuration
+SITE_NAME = config("SITE_NAME", default="Bazary")
+FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
+
+# File Upload Settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+AVATAR_MAX_SIZE = 2097152  # 2MB
+
+# User Management Settings
+USER_EMAIL_VERIFICATION_REQUIRED = config(
+    "USER_EMAIL_VERIFICATION_REQUIRED", default=True, cast=bool
+)
+USER_PASSWORD_RESET_TIMEOUT = config(
+    "USER_PASSWORD_RESET_TIMEOUT", default=3600, cast=int  # 1 hour
+)
+USER_EMAIL_VERIFICATION_TIMEOUT = config(
+    "USER_EMAIL_VERIFICATION_TIMEOUT", default=86400, cast=int  # 24 hours
+)

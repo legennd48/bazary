@@ -10,7 +10,12 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
-from apps.core.swagger_docs import SwaggerExamples, SwaggerResponses, SwaggerTags
+from apps.core.swagger_docs import (
+    SwaggerExamples, 
+    SwaggerParameters, 
+    SwaggerResponses, 
+    SwaggerTags
+)
 
 from .models import Category
 from .serializers import (
@@ -89,9 +94,194 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return queryset
 
     @swagger_auto_schema(
-        method="get",
-        responses={200: CategoryTreeSerializer(many=True)},
-        operation_description="Get categories in tree structure",
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="List Categories",
+        operation_description="Get a list of all categories with optional filtering and search",
+        manual_parameters=[
+            SwaggerParameters.SEARCH_QUERY,
+            SwaggerParameters.PAGE,
+            SwaggerParameters.PAGE_SIZE,
+            SwaggerParameters.ORDERING,
+            openapi.Parameter(
+                "parent",
+                openapi.IN_QUERY,
+                description="Filter by parent category ID",
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "is_active",
+                openapi.IN_QUERY,
+                description="Filter by active status",
+                type=openapi.TYPE_BOOLEAN,
+            ),
+        ],
+        responses={
+            200: openapi.Response(
+                "Categories retrieved successfully",
+                CategorySerializer(many=True),
+                examples={
+                    "application/json": {
+                        "count": 20,
+                        "next": None,
+                        "previous": None,
+                        "results": [SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE],
+                    }
+                },
+            ),
+            **SwaggerResponses.standard_crud(),
+        },
+    )
+    def list(self, request, *args, **kwargs):
+        """List categories with filtering and pagination."""
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Get Category Details",
+        operation_description="Retrieve detailed information about a specific category",
+        responses={
+            200: openapi.Response(
+                "Category details retrieved successfully",
+                CategorySerializer,
+                examples={"application/json": SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE},
+            ),
+            **SwaggerResponses.standard_crud(),
+        },
+    )
+    def retrieve(self, request, *args, **kwargs):
+        """Get detailed category information."""
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Create Category",
+        operation_description="Create a new category (Admin only)",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Category name"
+                ),
+                "description": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Category description"
+                ),
+                "parent": openapi.Schema(
+                    type=openapi.TYPE_INTEGER, description="Parent category ID"
+                ),
+                "sort_order": openapi.Schema(
+                    type=openapi.TYPE_INTEGER, description="Sort order for display"
+                ),
+                "is_active": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN, description="Whether category is active"
+                ),
+                "image": openapi.Schema(
+                    type=openapi.TYPE_STRING, 
+                    format=openapi.FORMAT_URI,
+                    description="Category image URL"
+                ),
+            },
+            required=["name"],
+            example=SwaggerExamples.CATEGORY_CREATE_EXAMPLE,
+        ),
+        responses={
+            201: openapi.Response(
+                "Category created successfully",
+                CategorySerializer,
+                examples={"application/json": SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE},
+            ),
+            **SwaggerResponses.standard_crud(),
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        """Create a new category."""
+        return super().create(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Update Category",
+        operation_description="Update an existing category (Admin only)",
+        request_body=CategoryCreateSerializer,
+        responses={
+            200: openapi.Response(
+                "Category updated successfully", CategorySerializer
+            ),
+            **SwaggerResponses.standard_crud(),
+        },
+    )
+    def update(self, request, *args, **kwargs):
+        """Update a category."""
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Partial Update Category",
+        operation_description="Partially update an existing category (Admin only)",
+        request_body=CategoryCreateSerializer,
+        responses={
+            200: openapi.Response(
+                "Category updated successfully", CategorySerializer
+            ),
+            **SwaggerResponses.standard_crud(),
+        },
+    )
+    def partial_update(self, request, *args, **kwargs):
+        """Partially update a category."""
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Delete Category",
+        operation_description="Delete an existing category (Admin only)",
+        responses={
+            204: openapi.Response("Category deleted successfully"),
+            **SwaggerResponses.standard_crud(),
+        },
+    )
+    def destroy(self, request, *args, **kwargs):
+        """Delete a category."""
+        return super().destroy(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Get Category Tree",
+        operation_description="""
+        Get all categories organized in a hierarchical tree structure.
+        
+        ### Features:
+        - Returns categories with their subcategories nested
+        - Shows the complete category hierarchy
+        - Includes all category details and relationships
+        - Public access - no authentication required
+        
+        ### Use Cases:
+        - Navigation menus
+        - Category browsing interfaces
+        - Sitemap generation
+        - Product organization display
+        """,
+        responses={
+            200: openapi.Response(
+                "Category tree retrieved successfully",
+                CategoryTreeSerializer(many=True),
+                examples={
+                    "application/json": [
+                        {
+                            "id": 1,
+                            "name": "Electronics",
+                            "description": "Electronic devices and accessories",
+                            "subcategories": [
+                                {
+                                    "id": 2,
+                                    "name": "Smartphones",
+                                    "description": "Mobile phones and accessories",
+                                    "subcategories": [],
+                                }
+                            ],
+                        }
+                    ]
+                },
+            ),
+        },
     )
     @action(detail=False, methods=["get"])
     def tree(self, request):
@@ -101,9 +291,34 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        method="get",
-        responses={200: CategorySerializer(many=True)},
-        operation_description="Get root categories (no parent)",
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Get Root Categories",
+        operation_description="""
+        Get all top-level categories (categories without a parent).
+        
+        ### Features:
+        - Returns only root-level categories
+        - Excludes subcategories
+        - Useful for main navigation
+        - Public access - no authentication required
+        
+        ### Use Cases:
+        - Main category navigation
+        - Homepage category display
+        - Top-level category selection
+        - Category hierarchy building
+        """,
+        responses={
+            200: openapi.Response(
+                "Root categories retrieved successfully",
+                CategorySerializer(many=True),
+                examples={
+                    "application/json": [
+                        SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE
+                    ]
+                },
+            ),
+        },
     )
     @action(detail=False, methods=["get"])
     def roots(self, request):
@@ -113,9 +328,35 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        method="get",
-        responses={200: CategorySerializer(many=True)},
-        operation_description="Get subcategories of a specific category",
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Get Subcategories",
+        operation_description="""
+        Get all subcategories of a specific category.
+        
+        ### Features:
+        - Returns direct child categories only
+        - Filtered by active status for public users
+        - Useful for building navigation breadcrumbs
+        - Public access - no authentication required
+        
+        ### Use Cases:
+        - Category navigation drill-down
+        - Subcategory selection
+        - Dynamic menu generation
+        - Category hierarchy exploration
+        """,
+        responses={
+            200: openapi.Response(
+                "Subcategories retrieved successfully",
+                CategorySerializer(many=True),
+                examples={
+                    "application/json": [
+                        SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE
+                    ]
+                },
+            ),
+            404: openapi.Response("Category not found"),
+        },
     )
     @action(detail=True, methods=["get"])
     def subcategories(self, request, pk=None):
@@ -126,14 +367,41 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        method="get",
+        tags=[SwaggerTags.CATEGORIES],
+        operation_summary="Get Category Products",
+        operation_description="""
+        Get all products belonging to a specific category.
+        
+        ### Features:
+        - Returns active products only
+        - Includes product count summary
+        - Shows category information alongside products
+        - Public access - no authentication required
+        
+        ### Response Structure:
+        - `count`: Total number of products in category
+        - `category`: Category details
+        - `products`: Array of product objects
+        
+        ### Use Cases:
+        - Category product listing pages
+        - Product browsing by category
+        - Category-specific product displays
+        - Inventory management by category
+        """,
         responses={
             200: openapi.Response(
-                "Products in category",
-                examples={"application/json": {"count": 10, "products": []}},
-            )
+                "Category products retrieved successfully",
+                examples={
+                    "application/json": {
+                        "count": 15,
+                        "category": SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE,
+                        "products": [SwaggerExamples.PRODUCT_RESPONSE_EXAMPLE],
+                    }
+                },
+            ),
+            404: openapi.Response("Category not found"),
         },
-        operation_description="Get products in a specific category",
     )
     @action(detail=True, methods=["get"])
     def products(self, request, pk=None):

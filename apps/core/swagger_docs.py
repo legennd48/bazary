@@ -72,6 +72,7 @@ class SwaggerTags:
     CATEGORIES = "Categories"
     TAGS = "Tags"
     USERS = "Users"
+    HEALTH = "Health"
 
 
 class SwaggerResponses:
@@ -210,6 +211,32 @@ class SwaggerExamples:
         "parent": None,
         "is_active": True,
         "sort_order": 1,
+    }
+
+    CATEGORY_RESPONSE_EXAMPLE = {
+        "id": 1,
+        "name": "Electronics",
+        "description": "Electronic devices and accessories",
+        "slug": "electronics",
+        "parent": None,
+        "is_active": True,
+        "sort_order": 1,
+        "image": None,
+        "created_at": "2025-01-01T12:00:00Z",
+        "updated_at": "2025-01-01T12:00:00Z",
+        "subcategories": [
+            {
+                "id": 2,
+                "name": "Smartphones", 
+                "slug": "smartphones"
+            },
+            {
+                "id": 3,
+                "name": "Laptops",
+                "slug": "laptops"
+            }
+        ],
+        "product_count": 45
     }
 
     # Tag Examples

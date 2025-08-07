@@ -24,9 +24,14 @@ from .product import (
 
 # Import permission classes from submodules
 from .user import (
+    BulkUserActionPermission,
+    EnhancedProfilePermission,
+    IsAdminOrStaff,
     PasswordChangePermission,
     ProfilePermission,
     UserActivationPermission,
+    UserActivityPermission,
+    UserAddressPermission,
     UserManagementPermission,
     UserRolePermission,
 )

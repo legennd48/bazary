@@ -3,6 +3,7 @@ Enhanced serializers for user management features.
 """
 
 import secrets
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -10,8 +11,13 @@ from django.utils import timezone
 
 from rest_framework import serializers
 
-from .models import UserProfile, UserAddress, EmailVerificationToken, PasswordResetToken, UserActivity
-
+from .models import (
+    EmailVerificationToken,
+    PasswordResetToken,
+    UserActivity,
+    UserAddress,
+    UserProfile,
+)
 
 User = get_user_model()
 

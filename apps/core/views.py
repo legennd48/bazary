@@ -49,10 +49,7 @@ from apps.core.swagger_docs import SwaggerTags
                 "application/json": {
                     "status": "healthy",
                     "timestamp": "2025-01-28T12:00:00.000Z",
-                    "services": {
-                        "database": "healthy",
-                        "cache": "healthy"
-                    }
+                    "services": {"database": "healthy", "cache": "healthy"},
                 }
             },
         ),
@@ -60,12 +57,12 @@ from apps.core.swagger_docs import SwaggerTags
             "System is unhealthy or degraded",
             examples={
                 "application/json": {
-                    "status": "unhealthy", 
+                    "status": "unhealthy",
                     "timestamp": "2025-01-28T12:00:00.000Z",
                     "services": {
                         "database": "unhealthy: connection refused",
-                        "cache": "degraded: timeout"
-                    }
+                        "cache": "degraded: timeout",
+                    },
                 }
             },
         ),

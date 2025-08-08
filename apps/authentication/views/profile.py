@@ -208,7 +208,7 @@ class UserAddressViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Get addresses for current user only."""
         # Handle Swagger schema generation
-        if getattr(self, 'swagger_fake_view', False):
+        if getattr(self, "swagger_fake_view", False):
             return UserAddress.objects.none()
         return UserAddress.objects.filter(user=self.request.user)
 

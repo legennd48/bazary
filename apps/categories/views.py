@@ -143,7 +143,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
             200: openapi.Response(
                 "Category details retrieved successfully",
                 CategorySerializer,
-                examples={"application/json": SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE},
+                examples={
+                    "application/json": SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE
+                },
             ),
             **SwaggerResponses.standard_crud(),
         },
@@ -175,9 +177,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
                     type=openapi.TYPE_BOOLEAN, description="Whether category is active"
                 ),
                 "image": openapi.Schema(
-                    type=openapi.TYPE_STRING, 
+                    type=openapi.TYPE_STRING,
                     format=openapi.FORMAT_URI,
-                    description="Category image URL"
+                    description="Category image URL",
                 ),
             },
             required=["name"],
@@ -187,7 +189,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
             201: openapi.Response(
                 "Category created successfully",
                 CategorySerializer,
-                examples={"application/json": SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE},
+                examples={
+                    "application/json": SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE
+                },
             ),
             **SwaggerResponses.standard_crud(),
         },
@@ -202,9 +206,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         operation_description="Update an existing category (Admin only)",
         request_body=CategoryCreateSerializer,
         responses={
-            200: openapi.Response(
-                "Category updated successfully", CategorySerializer
-            ),
+            200: openapi.Response("Category updated successfully", CategorySerializer),
             **SwaggerResponses.standard_crud(),
         },
     )
@@ -218,9 +220,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         operation_description="Partially update an existing category (Admin only)",
         request_body=CategoryCreateSerializer,
         responses={
-            200: openapi.Response(
-                "Category updated successfully", CategorySerializer
-            ),
+            200: openapi.Response("Category updated successfully", CategorySerializer),
             **SwaggerResponses.standard_crud(),
         },
     )
@@ -313,9 +313,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 "Root categories retrieved successfully",
                 CategorySerializer(many=True),
                 examples={
-                    "application/json": [
-                        SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE
-                    ]
+                    "application/json": [SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE]
                 },
             ),
         },
@@ -350,9 +348,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 "Subcategories retrieved successfully",
                 CategorySerializer(many=True),
                 examples={
-                    "application/json": [
-                        SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE
-                    ]
+                    "application/json": [SwaggerExamples.CATEGORY_RESPONSE_EXAMPLE]
                 },
             ),
             404: openapi.Response("Category not found"),

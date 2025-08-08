@@ -225,18 +225,10 @@ class SwaggerExamples:
         "created_at": "2025-01-01T12:00:00Z",
         "updated_at": "2025-01-01T12:00:00Z",
         "subcategories": [
-            {
-                "id": 2,
-                "name": "Smartphones", 
-                "slug": "smartphones"
-            },
-            {
-                "id": 3,
-                "name": "Laptops",
-                "slug": "laptops"
-            }
+            {"id": 2, "name": "Smartphones", "slug": "smartphones"},
+            {"id": 3, "name": "Laptops", "slug": "laptops"},
         ],
-        "product_count": 45
+        "product_count": 45,
     }
 
     # Tag Examples

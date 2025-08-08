@@ -80,47 +80,54 @@ class RegisterView(APIView):
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['username', 'email', 'password', 'password_confirm', 'first_name', 'last_name'],
+            required=[
+                "username",
+                "email",
+                "password",
+                "password_confirm",
+                "first_name",
+                "last_name",
+            ],
             properties={
-                'username': openapi.Schema(
+                "username": openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description='Unique username (3-150 characters)',
-                    example='john_doe'
+                    description="Unique username (3-150 characters)",
+                    example="john_doe",
                 ),
-                'email': openapi.Schema(
+                "email": openapi.Schema(
                     type=openapi.TYPE_STRING,
                     format=openapi.FORMAT_EMAIL,
-                    description='Valid email address for account verification',
-                    example='john.doe@example.com'
+                    description="Valid email address for account verification",
+                    example="john.doe@example.com",
                 ),
-                'password': openapi.Schema(
+                "password": openapi.Schema(
                     type=openapi.TYPE_STRING,
                     format=openapi.FORMAT_PASSWORD,
-                    description='Secure password (minimum 8 characters)',
-                    example='SecurePass123!'
+                    description="Secure password (minimum 8 characters)",
+                    example="SecurePass123!",
                 ),
-                'password_confirm': openapi.Schema(
+                "password_confirm": openapi.Schema(
                     type=openapi.TYPE_STRING,
                     format=openapi.FORMAT_PASSWORD,
-                    description='Confirm password (must match password)',
-                    example='SecurePass123!'
+                    description="Confirm password (must match password)",
+                    example="SecurePass123!",
                 ),
-                'first_name': openapi.Schema(
+                "first_name": openapi.Schema(
                     type=openapi.TYPE_STRING,
                     description="User's first name",
-                    example='John'
+                    example="John",
                 ),
-                'last_name': openapi.Schema(
+                "last_name": openapi.Schema(
                     type=openapi.TYPE_STRING,
                     description="User's last name",
-                    example='Doe'
+                    example="Doe",
                 ),
-                'phone_number': openapi.Schema(
+                "phone_number": openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description='Contact phone number (optional)',
-                    example='+1234567890'
+                    description="Contact phone number (optional)",
+                    example="+1234567890",
                 ),
-            }
+            },
         ),
         responses={
             201: openapi.Response(
@@ -128,52 +135,66 @@ class RegisterView(APIView):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'message': openapi.Schema(
+                        "message": openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            example='User registered successfully'
+                            example="User registered successfully",
                         ),
-                        'user': openapi.Schema(
+                        "user": openapi.Schema(
                             type=openapi.TYPE_OBJECT,
                             properties={
-                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
-                                'email': openapi.Schema(type=openapi.TYPE_STRING, example='john.doe@example.com'),
-                                'first_name': openapi.Schema(type=openapi.TYPE_STRING, example='John'),
-                                'last_name': openapi.Schema(type=openapi.TYPE_STRING, example='Doe'),
-                                'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
-                            }
-                        )
-                    }
-                )
+                                "id": openapi.Schema(
+                                    type=openapi.TYPE_INTEGER, example=1
+                                ),
+                                "email": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    example="john.doe@example.com",
+                                ),
+                                "first_name": openapi.Schema(
+                                    type=openapi.TYPE_STRING, example="John"
+                                ),
+                                "last_name": openapi.Schema(
+                                    type=openapi.TYPE_STRING, example="Doe"
+                                ),
+                                "date_joined": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    format=openapi.FORMAT_DATETIME,
+                                ),
+                            },
+                        ),
+                    },
+                ),
             ),
             400: openapi.Response(
                 description="Validation error",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'username': openapi.Schema(
+                        "username": openapi.Schema(
                             type=openapi.TYPE_ARRAY,
                             items=openapi.Schema(type=openapi.TYPE_STRING),
-                            example=['A user with that username already exists.']
+                            example=["A user with that username already exists."],
                         ),
-                        'email': openapi.Schema(
+                        "email": openapi.Schema(
                             type=openapi.TYPE_ARRAY,
                             items=openapi.Schema(type=openapi.TYPE_STRING),
-                            example=['Enter a valid email address.']
+                            example=["Enter a valid email address."],
                         ),
-                        'password': openapi.Schema(
+                        "password": openapi.Schema(
                             type=openapi.TYPE_ARRAY,
                             items=openapi.Schema(type=openapi.TYPE_STRING),
-                            example=['This password is too short. It must contain at least 8 characters.']
+                            example=[
+                                "This password is too short. It must contain at least 8 characters."
+                            ],
                         ),
-                        'non_field_errors': openapi.Schema(
+                        "non_field_errors": openapi.Schema(
                             type=openapi.TYPE_ARRAY,
                             items=openapi.Schema(type=openapi.TYPE_STRING),
-                            example=["Passwords don't match."]
-                        )
-                    }
-                )
+                            example=["Passwords don't match."],
+                        ),
+                    },
+                ),
             ),
-        }
+        },
     )
     def post(self, request):
         """Register a new user."""
@@ -282,7 +303,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter queryset based on user permissions."""
         # Handle Swagger schema generation
-        if getattr(self, 'swagger_fake_view', False):
+        if getattr(self, "swagger_fake_view", False):
             return User.objects.none()
         if self.request.user.is_staff:
             return User.objects.all()
@@ -307,12 +328,12 @@ class UserViewSet(viewsets.ModelViewSet):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'message': openapi.Schema(
+                        "message": openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            example='Password changed successfully'
+                            example="Password changed successfully",
                         )
-                    }
-                )
+                    },
+                ),
             ),
             400: openapi.Response("Validation error"),
             403: openapi.Response("Admin access required"),
@@ -351,20 +372,20 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['username', 'password'],
+            required=["username", "password"],
             properties={
-                'username': openapi.Schema(
+                "username": openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description='Username or email address',
-                    example='john_doe'
+                    description="Username or email address",
+                    example="john_doe",
                 ),
-                'password': openapi.Schema(
+                "password": openapi.Schema(
                     type=openapi.TYPE_STRING,
                     format=openapi.FORMAT_PASSWORD,
-                    description='User password',
-                    example='SecurePass123!'
+                    description="User password",
+                    example="SecurePass123!",
                 ),
-            }
+            },
         ),
         responses={
             200: openapi.Response(
@@ -372,32 +393,32 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'access': openapi.Schema(
+                        "access": openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            description='JWT access token (expires in 15 minutes)',
-                            example='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                            description="JWT access token (expires in 15 minutes)",
+                            example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
                         ),
-                        'refresh': openapi.Schema(
+                        "refresh": openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            description='JWT refresh token (expires in 7 days)',
-                            example='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                            description="JWT refresh token (expires in 7 days)",
+                            example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
                         ),
-                    }
-                )
+                    },
+                ),
             ),
             401: openapi.Response(
                 description="Invalid credentials",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'detail': openapi.Schema(
+                        "detail": openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            example='No active account found with the given credentials'
+                            example="No active account found with the given credentials",
                         )
-                    }
-                )
+                    },
+                ),
             ),
-        }
+        },
     )
     def post(self, request, *args, **kwargs):
         """Obtain JWT token pair."""
@@ -425,14 +446,14 @@ class CustomTokenRefreshView(TokenRefreshView):
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['refresh'],
+            required=["refresh"],
             properties={
-                'refresh': openapi.Schema(
+                "refresh": openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description='Valid JWT refresh token',
-                    example='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                    description="Valid JWT refresh token",
+                    example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
                 ),
-            }
+            },
         ),
         responses={
             200: openapi.Response(
@@ -440,31 +461,30 @@ class CustomTokenRefreshView(TokenRefreshView):
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'access': openapi.Schema(
+                        "access": openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            description='New JWT access token',
-                            example='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                            description="New JWT access token",
+                            example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
                         ),
-                    }
-                )
+                    },
+                ),
             ),
             401: openapi.Response(
                 description="Invalid or expired refresh token",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'detail': openapi.Schema(
+                        "detail": openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            example='Token is invalid or expired'
+                            example="Token is invalid or expired",
                         ),
-                        'code': openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            example='token_not_valid'
+                        "code": openapi.Schema(
+                            type=openapi.TYPE_STRING, example="token_not_valid"
                         ),
-                    }
-                )
+                    },
+                ),
             ),
-        }
+        },
     )
     def post(self, request, *args, **kwargs):
         """Refresh access token."""
@@ -487,40 +507,39 @@ class CustomTokenVerifyView(TokenVerifyView):
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['token'],
+            required=["token"],
             properties={
-                'token': openapi.Schema(
+                "token": openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description='JWT token to verify (access or refresh)',
-                    example='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                    description="JWT token to verify (access or refresh)",
+                    example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
                 ),
-            }
+            },
         ),
         responses={
             200: openapi.Response(
                 description="Token is valid",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
-                    properties={}  # Empty response for valid token
-                )
+                    properties={},  # Empty response for valid token
+                ),
             ),
             401: openapi.Response(
                 description="Invalid or expired token",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'detail': openapi.Schema(
+                        "detail": openapi.Schema(
                             type=openapi.TYPE_STRING,
-                            example='Token is invalid or expired'
+                            example="Token is invalid or expired",
                         ),
-                        'code': openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            example='token_not_valid'
+                        "code": openapi.Schema(
+                            type=openapi.TYPE_STRING, example="token_not_valid"
                         ),
-                    }
-                )
+                    },
+                ),
             ),
-        }
+        },
     )
     def post(self, request, *args, **kwargs):
         """Verify token."""

@@ -15,12 +15,11 @@ import os
 
 from decouple import config
 
-if config('DATABASE_URL', default=None):
+if config("DATABASE_URL", default=None):
     # Use PostgreSQL when DATABASE_URL is provided (Docker environment)
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.parse(config('DATABASE_URL'))
-    }
+
+    DATABASES = {"default": dj_database_url.parse(config("DATABASE_URL"))}
 else:
     # Use SQLite for local development
     DATABASES = {
@@ -59,7 +58,7 @@ try:
     DEBUG_TOOLBAR_CONFIG = {
         "SHOW_TOOLBAR_CALLBACK": lambda request: DEBUG,
     }
-    
+
 except ImportError:
     # Debug toolbar not available, skip it
     pass
@@ -73,8 +72,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Email backend for development - use environment variable to override
 # If EMAIL_BACKEND is explicitly set in environment, use that, otherwise console
 EMAIL_BACKEND = config(
-    "EMAIL_BACKEND", 
-    default="django.core.mail.backends.console.EmailBackend"
+    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
 )
 
 # Disable caching in development

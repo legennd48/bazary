@@ -365,18 +365,17 @@ API_SECURITY_LOGGING = config("API_SECURITY_LOGGING", default=True, cast=bool)
 
 # DRF Spectacular settings
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Bazary API',
-    'DESCRIPTION': 'A comprehensive e-commerce API built with Django REST Framework',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
-    'SCHEMA_PATH_PREFIX': r'/api/v[0-9]',
+    "TITLE": "Bazary API",
+    "DESCRIPTION": "A comprehensive e-commerce API built with Django REST Framework",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
 }
 
 # Email Configuration
 EMAIL_BACKEND = config(
-    "EMAIL_BACKEND", 
-    default="django.core.mail.backends.console.EmailBackend"
+    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
 )
 EMAIL_HOST = config("EMAIL_HOST", default="localhost")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)

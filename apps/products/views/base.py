@@ -1,7 +1,5 @@
 """
-Products views.
-
-This module imports all product-related views from the views package.
+Base product views.
 """
 
 from django.db.models import Q
@@ -26,19 +24,15 @@ from apps.core.swagger_docs import (
     get_testing_instructions_response,
 )
 from apps.core.throttling.decorators import RateLimitMixin, search_ratelimit
-
-from .filters import ProductFilter
-from .models import Product, Tag
-from .serializers import (
+from apps.products.filters import ProductFilter
+from apps.products.models import Product, Tag
+from apps.products.serializers import (
     ProductCreateUpdateSerializer,
     ProductDetailSerializer,
     ProductListSerializer,
     ProductSearchSerializer,
     TagSerializer,
 )
-
-# Import all views from the views package
-from .views import *  # noqa: F401,F403
 
 
 @swagger_auto_schema(

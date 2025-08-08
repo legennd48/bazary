@@ -4,6 +4,7 @@ This configuration is specifically for GitHub Actions CI/CD pipeline.
 """
 
 import os
+
 from .base import *
 
 # Use PostgreSQL database for CI tests (matches production better)
@@ -59,6 +60,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
 
 # Disable logging during tests
 import logging
+
 logging.disable(logging.CRITICAL)
 
 # Test specific settings

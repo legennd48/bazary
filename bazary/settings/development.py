@@ -12,6 +12,7 @@ DEBUG = True
 
 # Database for development - use PostgreSQL in Docker or SQLite locally
 import os
+
 from decouple import config
 
 if config('DATABASE_URL', default=None):

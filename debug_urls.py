@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 import os
+
 import django
 
 # Setup Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bazary.settings.testing")
 django.setup()
 
-from django.urls import reverse, NoReverseMatch
-from django.test import Client
-from django.test import TestCase
+from django.test import Client, TestCase
+from django.urls import NoReverseMatch, reverse
 
 # Create a test client
 client = Client()

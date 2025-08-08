@@ -11,10 +11,10 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from apps.core.swagger_docs import (
-    SwaggerExamples, 
-    SwaggerParameters, 
-    SwaggerResponses, 
-    SwaggerTags
+    SwaggerExamples,
+    SwaggerParameters,
+    SwaggerResponses,
+    SwaggerTags,
 )
 
 from .models import Category

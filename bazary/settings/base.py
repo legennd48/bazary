@@ -7,6 +7,7 @@ This file contains settings common to all environments.
 import os
 import sys
 from pathlib import Path
+
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

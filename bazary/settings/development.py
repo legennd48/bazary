@@ -69,8 +69,12 @@ SECURE_SSL_REDIRECT = False
 # CORS settings for development
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Email backend for development
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Email backend for development - use environment variable to override
+# If EMAIL_BACKEND is explicitly set in environment, use that, otherwise console
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND", 
+    default="django.core.mail.backends.console.EmailBackend"
+)
 
 # Disable caching in development
 CACHES = {

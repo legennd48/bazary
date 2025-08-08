@@ -16,7 +16,7 @@ __all__ = [
     "ProductImage",
     "Tag",
     "ProductVariant",
-    "ProductVariantImage", 
+    "ProductVariantImage",
     "ProductVariantOption",
     "VariantOption",
     "VariantOptionValue",

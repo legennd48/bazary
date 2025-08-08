@@ -1,8 +1,6 @@
 """
-Base product serializers.
+Product serializers for base functionality.
 """
-
-from decimal import Decimal
 
 from rest_framework import serializers
 

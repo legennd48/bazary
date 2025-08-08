@@ -211,17 +211,17 @@ class Product(TimeStampedModel):
         variants = self.available_variants
         if not variants.exists():
             return None
-        
+
         prices = []
         for variant in variants:
             prices.append(variant.effective_price)
-        
+
         if not prices:
             return None
-            
+
         min_price = min(prices)
         max_price = max(prices)
-        
+
         if min_price == max_price:
             return {"min": min_price, "max": max_price, "single": True}
         return {"min": min_price, "max": max_price, "single": False}

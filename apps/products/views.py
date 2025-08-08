@@ -4,9 +4,6 @@ Products views.
 This module imports all product-related views from the views package.
 """
 
-# Import all views from the views package
-from .views import *  # noqa: F401,F403
-
 from django.db.models import Q
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -39,6 +36,9 @@ from .serializers import (
     ProductSearchSerializer,
     TagSerializer,
 )
+
+# Import all views from the views package
+from .views import *  # noqa: F401,F403
 
 
 @swagger_auto_schema(

@@ -16,32 +16,27 @@ class VariantOption(TimeStampedModel):
     """
 
     name = models.CharField(
-        max_length=50, 
-        unique=True, 
-        help_text="Option name (e.g., 'Color', 'Size')"
+        max_length=50, unique=True, help_text="Option name (e.g., 'Color', 'Size')"
     )
     display_name = models.CharField(
-        max_length=100, 
-        help_text="Display name for frontend"
+        max_length=100, help_text="Display name for frontend"
     )
     display_type = models.CharField(
         max_length=20,
         choices=[
-            ('dropdown', 'Dropdown'),
-            ('color', 'Color Picker'),
-            ('button', 'Button Selection'),
-            ('radio', 'Radio Button'),
+            ("dropdown", "Dropdown"),
+            ("color", "Color Picker"),
+            ("button", "Button Selection"),
+            ("radio", "Radio Button"),
         ],
-        default='dropdown',
-        help_text="How this option should be displayed"
+        default="dropdown",
+        help_text="How this option should be displayed",
     )
     is_required = models.BooleanField(
-        default=True,
-        help_text="Whether this option is required for the product"
+        default=True, help_text="Whether this option is required for the product"
     )
     sort_order = models.PositiveIntegerField(
-        default=0,
-        help_text="Display order of options"
+        default=0, help_text="Display order of options"
     )
 
     class Meta:
@@ -61,31 +56,28 @@ class VariantOptionValue(TimeStampedModel):
         VariantOption,
         on_delete=models.CASCADE,
         related_name="values",
-        help_text="The option this value belongs to"
+        help_text="The option this value belongs to",
     )
     value = models.CharField(
-        max_length=100,
-        help_text="The actual value (e.g., 'Red', 'Small')"
+        max_length=100, help_text="The actual value (e.g., 'Red', 'Small')"
     )
     display_name = models.CharField(
-        max_length=100,
-        help_text="Display name for frontend"
+        max_length=100, help_text="Display name for frontend"
     )
     color_code = models.CharField(
         max_length=7,
         blank=True,
         null=True,
-        help_text="Hex color code for color options"
+        help_text="Hex color code for color options",
     )
     image = models.ImageField(
         upload_to="variant_values/",
         blank=True,
         null=True,
-        help_text="Optional image for this value"
+        help_text="Optional image for this value",
     )
     sort_order = models.PositiveIntegerField(
-        default=0,
-        help_text="Display order of values"
+        default=0, help_text="Display order of values"
     )
 
     class Meta:
@@ -106,14 +98,12 @@ class ProductVariant(TimeStampedModel):
         "products.Product",
         on_delete=models.CASCADE,
         related_name="variants",
-        help_text="The base product this variant belongs to"
+        help_text="The base product this variant belongs to",
     )
     sku = models.CharField(
-        max_length=100,
-        unique=True,
-        help_text="Unique SKU for this variant"
+        max_length=100, unique=True, help_text="Unique SKU for this variant"
     )
-    
+
     # Pricing
     price = models.DecimalField(
         max_digits=10,
@@ -121,67 +111,52 @@ class ProductVariant(TimeStampedModel):
         null=True,
         blank=True,
         validators=[MinValueValidator(Decimal("0.01"))],
-        help_text="Variant-specific price (overrides product price if set)"
+        help_text="Variant-specific price (overrides product price if set)",
     )
     compare_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Original price for this variant"
+        help_text="Original price for this variant",
     )
     cost_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Cost price for this variant"
+        help_text="Cost price for this variant",
     )
-    
+
     # Inventory
     stock_quantity = models.PositiveIntegerField(
-        default=0,
-        help_text="Stock quantity for this variant"
+        default=0, help_text="Stock quantity for this variant"
     )
     low_stock_threshold = models.PositiveIntegerField(
-        default=10,
-        help_text="Low stock warning threshold for this variant"
+        default=10, help_text="Low stock warning threshold for this variant"
     )
-    
+
     # Status
     is_active = models.BooleanField(
-        default=True,
-        help_text="Whether this variant is available"
+        default=True, help_text="Whether this variant is available"
     )
-    
+
     # Physical attributes
     weight = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text="Weight in grams"
+        help_text="Weight in grams",
     )
     dimensions_length = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        help_text="Length in cm"
+        max_digits=8, decimal_places=2, null=True, blank=True, help_text="Length in cm"
     )
     dimensions_width = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        help_text="Width in cm"
+        max_digits=8, decimal_places=2, null=True, blank=True, help_text="Width in cm"
     )
     dimensions_height = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        help_text="Height in cm"
+        max_digits=8, decimal_places=2, null=True, blank=True, help_text="Height in cm"
     )
 
     class Meta:
@@ -225,7 +200,7 @@ class ProductVariant(TimeStampedModel):
         """Calculate discount percentage for this variant."""
         compare_price = self.compare_price or self.product.compare_price
         effective_price = self.effective_price
-        
+
         if compare_price and compare_price > effective_price:
             return int(((compare_price - effective_price) / compare_price) * 100)
         return 0
@@ -237,19 +212,17 @@ class ProductVariantOption(TimeStampedModel):
     """
 
     variant = models.ForeignKey(
-        ProductVariant,
-        on_delete=models.CASCADE,
-        related_name="option_values"
+        ProductVariant, on_delete=models.CASCADE, related_name="option_values"
     )
     option = models.ForeignKey(
         VariantOption,
         on_delete=models.CASCADE,
-        help_text="The option type (e.g., Color, Size)"
+        help_text="The option type (e.g., Color, Size)",
     )
     value = models.ForeignKey(
         VariantOptionValue,
         on_delete=models.CASCADE,
-        help_text="The selected value (e.g., Red, Large)"
+        help_text="The selected value (e.g., Red, Large)",
     )
 
     class Meta:
@@ -279,27 +252,18 @@ class ProductVariantImage(TimeStampedModel):
     """
 
     variant = models.ForeignKey(
-        ProductVariant,
-        on_delete=models.CASCADE,
-        related_name="images"
+        ProductVariant, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField(
-        upload_to="variant_images/",
-        help_text="Variant-specific image"
+        upload_to="variant_images/", help_text="Variant-specific image"
     )
     alt_text = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="Alternative text for accessibility"
+        max_length=255, blank=True, help_text="Alternative text for accessibility"
     )
     is_primary = models.BooleanField(
-        default=False,
-        help_text="Whether this is the primary image for the variant"
+        default=False, help_text="Whether this is the primary image for the variant"
     )
-    sort_order = models.PositiveIntegerField(
-        default=0,
-        help_text="Display order"
-    )
+    sort_order = models.PositiveIntegerField(default=0, help_text="Display order")
 
     class Meta:
         db_table = "product_variant_images"

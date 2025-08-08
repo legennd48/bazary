@@ -27,7 +27,9 @@ router.register(r"management", ProductManagementViewSet, basename="product-manag
 
 # Variant management
 router.register(r"variant-options", VariantOptionViewSet, basename="variant-option")
-router.register(r"variant-option-values", VariantOptionValueViewSet, basename="variant-option-value")
+router.register(
+    r"variant-option-values", VariantOptionValueViewSet, basename="variant-option-value"
+)
 router.register(r"variants", ProductVariantViewSet, basename="product-variant")
 
 urlpatterns = [

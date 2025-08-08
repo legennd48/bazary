@@ -85,7 +85,9 @@ class ProductVariantOptionSerializer(serializers.ModelSerializer):
     option_name = serializers.CharField(source="option.display_name", read_only=True)
     value_name = serializers.CharField(source="value.display_name", read_only=True)
     value_color = serializers.CharField(source="value.color_code", read_only=True)
-    option_display_type = serializers.CharField(source="option.display_type", read_only=True)
+    option_display_type = serializers.CharField(
+        source="option.display_type", read_only=True
+    )
 
     class Meta:
         model = ProductVariantOption
@@ -106,7 +108,9 @@ class ProductVariantListSerializer(serializers.ModelSerializer):
 
     option_values = ProductVariantOptionSerializer(many=True, read_only=True)
     primary_image = ProductVariantImageSerializer(read_only=True)
-    effective_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    effective_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
     is_in_stock = serializers.BooleanField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     discount_percentage = serializers.IntegerField(read_only=True)
@@ -158,12 +162,10 @@ class ProductVariantCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating ProductVariant."""
 
     option_values_data = serializers.ListField(
-        child=serializers.DictField(
-            child=serializers.IntegerField()
-        ),
+        child=serializers.DictField(child=serializers.IntegerField()),
         write_only=True,
         required=False,
-        help_text="List of option-value pairs: [{'option': 1, 'value': 2}, ...]"
+        help_text="List of option-value pairs: [{'option': 1, 'value': 2}, ...]",
     )
 
     class Meta:
@@ -195,7 +197,7 @@ class ProductVariantCreateUpdateSerializer(serializers.ModelSerializer):
             ProductVariantOption.objects.create(
                 variant=variant,
                 option_id=option_value_data["option"],
-                value_id=option_value_data["value"]
+                value_id=option_value_data["value"],
             )
 
         return variant
@@ -213,13 +215,13 @@ class ProductVariantCreateUpdateSerializer(serializers.ModelSerializer):
         if option_values_data is not None:
             # Remove existing option values
             instance.option_values.all().delete()
-            
+
             # Create new option values
             for option_value_data in option_values_data:
                 ProductVariantOption.objects.create(
                     variant=instance,
                     option_id=option_value_data["option"],
-                    value_id=option_value_data["value"]
+                    value_id=option_value_data["value"],
                 )
 
         return instance
@@ -235,12 +237,10 @@ class ProductVariantCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     "Each option_value must contain 'option' and 'value' keys"
                 )
-            
+
             option_id = option_value["option"]
             if option_id in seen_options:
-                raise serializers.ValidationError(
-                    f"Duplicate option {option_id} found"
-                )
+                raise serializers.ValidationError(f"Duplicate option {option_id} found")
             seen_options.add(option_id)
 
             # Validate that value belongs to option
@@ -252,9 +252,7 @@ class ProductVariantCreateUpdateSerializer(serializers.ModelSerializer):
                         f"Value {value_obj.id} does not belong to option {option_id}"
                     )
             except (VariantOption.DoesNotExist, VariantOptionValue.DoesNotExist):
-                raise serializers.ValidationError(
-                    "Invalid option or value ID"
-                )
+                raise serializers.ValidationError("Invalid option or value ID")
 
         return value
 

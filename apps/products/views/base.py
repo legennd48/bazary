@@ -24,7 +24,6 @@ from apps.core.swagger_docs import (
     get_testing_instructions_response,
 )
 from apps.core.throttling.decorators import RateLimitMixin, search_ratelimit
-
 from apps.products.filters import ProductFilter
 from apps.products.models import Product, Tag
 from apps.products.serializers import (

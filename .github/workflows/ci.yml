@@ -54,12 +54,12 @@ jobs:
     - name: Check imports with isort
       run: |
         pip install isort
-        isort apps/ --check-only --diff
+        isort . --check-only --diff --skip-glob="*/migrations/*" --skip="bazary_env"
         
     - name: Format check with black
       run: |
         pip install black
-        black apps/ --check --diff
+        black . --check --diff --exclude="bazary_env|migrations"
         
     - name: Upload security report
       uses: actions/upload-artifact@v4

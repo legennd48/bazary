@@ -4,15 +4,16 @@ Original authentication views.
 
 from django.contrib.auth import get_user_model
 
+from drf_spectacular.utils import extend_schema, inline_serializer
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions
+from rest_framework import serializers as drf_serializers
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, inline_serializer
-from rest_framework import serializers as drf_serializers
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -351,7 +352,9 @@ class UserViewSet(viewsets.ModelViewSet):
         operation_summary="List Users",
         operation_description="Get a list of all users (Admin only)",
         responses={
-            200: openapi.Response("Users retrieved successfully", UserSerializer(many=True)),
+            200: openapi.Response(
+                "Users retrieved successfully", UserSerializer(many=True)
+            ),
             401: openapi.Response("Unauthorized - Admin access required"),
             403: openapi.Response("Forbidden - Staff privileges required"),
         },
@@ -365,7 +368,9 @@ class UserViewSet(viewsets.ModelViewSet):
         operation_summary="Get User Details",
         operation_description="Retrieve detailed information about a specific user (Admin only)",
         responses={
-            200: openapi.Response("User details retrieved successfully", UserSerializer),
+            200: openapi.Response(
+                "User details retrieved successfully", UserSerializer
+            ),
             401: openapi.Response("Unauthorized - Admin access required"),
             403: openapi.Response("Forbidden - Staff privileges required"),
             404: openapi.Response("User not found"),
@@ -486,9 +491,9 @@ class UserViewSet(viewsets.ModelViewSet):
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     ## JWT Token Authentication
-    
+
     Secure user authentication with JWT token generation.
-    
+
     ### 🔐 Authentication Process
     - **Credential Validation**: Verifies username/email and password
     - **Token Generation**: Creates access and refresh tokens
@@ -501,7 +506,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             name="TokenObtainPairRequest",
             fields={
                 "email": drf_serializers.EmailField(),
-                "password": drf_serializers.CharField()
+                "password": drf_serializers.CharField(),
             },
         ),
         responses={
@@ -621,9 +626,9 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class CustomTokenRefreshView(TokenRefreshView):
     """
     ## JWT Token Refresh
-    
+
     Maintain authentication by refreshing expired access tokens.
-    
+
     ### 🔄 Token Refresh Process
     - **Validation**: Verifies refresh token validity
     - **Generation**: Creates new access token
@@ -728,9 +733,9 @@ class CustomTokenRefreshView(TokenRefreshView):
 class CustomTokenVerifyView(TokenVerifyView):
     """
     ## JWT Token Verification
-    
+
     Validate JWT tokens without requiring refresh.
-    
+
     ### 🔍 Verification Process
     - **Token Validation**: Checks token format and signature
     - **Expiry Check**: Verifies token hasn't expired

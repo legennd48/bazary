@@ -3,10 +3,13 @@ Custom schema hooks for DRF Spectacular.
 
 This module contains post-processing hooks to tweak the generated OpenAPI schema.
 """
+
 from typing import Any, Dict
 
 
-def rename_api_tag_to_z_advanced(result: Dict[str, Any], generator: Any, request: Any, **kwargs) -> Dict[str, Any]:
+def rename_api_tag_to_z_advanced(
+    result: Dict[str, Any], generator: Any, request: Any, **kwargs
+) -> Dict[str, Any]:
     """Rename any 'api' tag to 'Z Advanced Features' so it appears at the end of UI.
 
     This primarily affects router root endpoints and any views that defaulted to the

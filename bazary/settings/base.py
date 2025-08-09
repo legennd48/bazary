@@ -407,7 +407,7 @@ Comprehensive testing guides available for each endpoint group.
             "description": "Core authentication endpoints for user login, registration, and session management. Start here for API access.",
         },
         {
-            "name": "02 📧 Email Verification", 
+            "name": "02 📧 Email Verification",
             "description": "Email verification and account activation endpoints. Required for new user accounts.",
         },
         {
@@ -435,7 +435,7 @@ Comprehensive testing guides available for each endpoint group.
             "description": "Administrative user management operations. Requires admin privileges.",
         },
         {
-            "name": "09 🛡️ Admin - Product Management", 
+            "name": "09 🛡️ Admin - Product Management",
             "description": "Administrative product management and bulk operations. Requires admin privileges.",
         },
         {
@@ -497,17 +497,14 @@ Comprehensive testing guides available for each endpoint group.
     ],
     "EXTERNAL_DOCS": {
         "description": "Complete API Documentation & Guides",
-        "url": "https://github.com/legennd48/bazary/blob/main/README.md"
+        "url": "https://github.com/legennd48/bazary/blob/main/README.md",
     },
     "CONTACT": {
         "name": "Bazary API Support",
         "email": "api-support@bazary.com",
-        "url": "https://github.com/legennd48/bazary/issues"
+        "url": "https://github.com/legennd48/bazary/issues",
     },
-    "LICENSE": {
-        "name": "MIT License",
-        "url": "https://opensource.org/licenses/MIT"
-    },
+    "LICENSE": {"name": "MIT License", "url": "https://opensource.org/licenses/MIT"},
     # Postprocessing hooks to tweak schema after generation
     "POSTPROCESSING_HOOKS": [
         "apps.core.schema_hooks.rename_api_tag_to_z_advanced",

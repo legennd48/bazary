@@ -306,7 +306,9 @@ class UserAddressViewSet(viewsets.ModelViewSet):
         - Returns 404 if address doesn't belong to the user
         """,
         responses={
-            200: openapi.Response("Address retrieved successfully", UserAddressSerializer),
+            200: openapi.Response(
+                "Address retrieved successfully", UserAddressSerializer
+            ),
             404: openapi.Response("Address not found"),
         },
     )
@@ -326,7 +328,9 @@ class UserAddressViewSet(viewsets.ModelViewSet):
         """,
         request_body=UserAddressSerializer,
         responses={
-            200: openapi.Response("Address updated successfully", UserAddressSerializer),
+            200: openapi.Response(
+                "Address updated successfully", UserAddressSerializer
+            ),
             400: openapi.Response("Validation error"),
             404: openapi.Response("Address not found"),
         },
@@ -347,7 +351,9 @@ class UserAddressViewSet(viewsets.ModelViewSet):
         """,
         request_body=UserAddressSerializer,
         responses={
-            200: openapi.Response("Address updated successfully", UserAddressSerializer),
+            200: openapi.Response(
+                "Address updated successfully", UserAddressSerializer
+            ),
             400: openapi.Response("Validation error"),
             404: openapi.Response("Address not found"),
         },

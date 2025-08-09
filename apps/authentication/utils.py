@@ -101,7 +101,9 @@ def send_verification_email(user: User, token: EmailVerificationToken) -> bool:
     """Send email verification email."""
     try:
         # Use the Django API endpoint directly for verification
-        verification_url = f"http://localhost:8001/api/v1/auth/verify-email/?token={token.token}"
+        verification_url = (
+            f"http://localhost:8001/api/v1/auth/verify-email/?token={token.token}"
+        )
 
         context = {
             "user": user,

@@ -183,7 +183,9 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
         """,
         request_body=AdminUserManagementSerializer,
         responses={
-            201: openapi.Response("User created successfully", AdminUserManagementSerializer),
+            201: openapi.Response(
+                "User created successfully", AdminUserManagementSerializer
+            ),
             400: openapi.Response("Validation error"),
             403: openapi.Response("Admin access required"),
         },
@@ -210,7 +212,9 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
         - Complete audit logging
         """,
         responses={
-            200: openapi.Response("User details retrieved", AdminUserManagementSerializer),
+            200: openapi.Response(
+                "User details retrieved", AdminUserManagementSerializer
+            ),
             404: openapi.Response("User not found"),
             403: openapi.Response("Admin access required"),
         },
@@ -238,7 +242,9 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
         """,
         request_body=AdminUserManagementSerializer,
         responses={
-            200: openapi.Response("User updated successfully", AdminUserManagementSerializer),
+            200: openapi.Response(
+                "User updated successfully", AdminUserManagementSerializer
+            ),
             400: openapi.Response("Validation error"),
             404: openapi.Response("User not found"),
             403: openapi.Response("Admin access required"),
@@ -267,7 +273,9 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
         """,
         request_body=AdminUserManagementSerializer,
         responses={
-            200: openapi.Response("User updated successfully", AdminUserManagementSerializer),
+            200: openapi.Response(
+                "User updated successfully", AdminUserManagementSerializer
+            ),
             400: openapi.Response("Validation error"),
             404: openapi.Response("User not found"),
             403: openapi.Response("Admin access required"),

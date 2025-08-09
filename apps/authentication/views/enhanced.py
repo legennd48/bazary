@@ -225,11 +225,11 @@ class EmailVerificationView(APIView):
     )
     def get(self, request):
         """Verify email address via GET request (for email links)."""
-        token = request.GET.get('token')
+        token = request.GET.get("token")
         if not token:
             return Response(
-                {"error": "Token parameter is required"}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Token parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         success, message = verify_email_with_token(token)
@@ -257,7 +257,8 @@ class EmailVerificationView(APIView):
             </html>
             """
             from django.http import HttpResponse
-            return HttpResponse(html_content, content_type='text/html')
+
+            return HttpResponse(html_content, content_type="text/html")
         else:
             # Return error HTML
             html_content = f"""
@@ -281,7 +282,8 @@ class EmailVerificationView(APIView):
             </html>
             """
             from django.http import HttpResponse
-            return HttpResponse(html_content, content_type='text/html', status=400)
+
+            return HttpResponse(html_content, content_type="text/html", status=400)
 
 
 class ResendVerificationView(APIView):

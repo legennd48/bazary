@@ -14,6 +14,7 @@ from decimal import Decimal
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiParameter,
@@ -21,7 +22,7 @@ from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
 )
-from rest_framework import serializers, status, viewsets, permissions
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -35,14 +36,15 @@ class IsUserOwnerOrReadOnly(permissions.BasePermission):
     Custom permission for objects that use 'user' field instead of 'owner'.
     Works for PaymentMethod, Transaction, Cart, etc.
     """
-    
+
     def has_object_permission(self, request, view, obj):
         # Read permissions for all authenticated users
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Write permissions only for the object owner
         return obj.user == request.user
+
 
 from .models import Cart, CartItem, PaymentMethod, PaymentProvider, Transaction
 from .serializers import (
@@ -52,11 +54,11 @@ from .serializers import (
     CartItemSerializer,
     CartSerializer,
     CartSummarySerializer,
+    PaymentInitiationResponseSerializer,
+    PaymentInitiationSerializer,
     PaymentMethodCreateSerializer,
     PaymentMethodSerializer,
     PaymentProviderSerializer,
-    PaymentInitiationSerializer,
-    PaymentInitiationResponseSerializer,
     PaymentVerificationRequestSerializer,
     RefundTransactionSerializer,
     TransactionCreateSerializer,
@@ -127,7 +129,7 @@ class PaymentProviderViewSet(viewsets.ReadOnlyModelViewSet):
     - Authenticated users only
     - Read-only access to provider information
     """
-    
+
     queryset = PaymentProvider.objects.filter(is_active=True)
     serializer_class = PaymentProviderSerializer
     permission_classes = [IsAuthenticated]
@@ -237,7 +239,7 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
     - Sensitive data is tokenized and encrypted
     - PCI DSS compliant storage
     """
-    
+
     serializer_class = PaymentMethodSerializer
     permission_classes = [IsAuthenticated, IsUserOwnerOrReadOnly]
 
@@ -273,16 +275,16 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
     def set_default(self, request, pk=None):
         """Set payment method as default."""
         payment_method = self.get_object()
-        
+
         # Remove default from other payment methods
-        PaymentMethod.objects.filter(
-            user=request.user, is_default=True
-        ).update(is_default=False)
-        
+        PaymentMethod.objects.filter(user=request.user, is_default=True).update(
+            is_default=False
+        )
+
         # Set this one as default
         payment_method.is_default = True
         payment_method.save()
-        
+
         serializer = self.get_serializer(payment_method)
         return Response(serializer.data)
 
@@ -296,7 +298,14 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
                 name="status",
                 type=str,
                 description="Filter by transaction status",
-                enum=["pending", "processing", "succeeded", "failed", "cancelled", "refunded"],
+                enum=[
+                    "pending",
+                    "processing",
+                    "succeeded",
+                    "failed",
+                    "cancelled",
+                    "refunded",
+                ],
             ),
             OpenApiParameter(
                 name="transaction_type",
@@ -398,7 +407,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
     - Secure payment processing
     - Complete audit trail
     """
-    
+
     serializer_class = TransactionSerializer
     permission_classes = [IsAuthenticated, IsUserOwnerOrReadOnly]
     http_method_names = ["get", "post", "options", "head"]
@@ -412,15 +421,15 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if not user or not getattr(user, "is_authenticated", False):
             return Transaction.objects.none()
         queryset = Transaction.objects.filter(user=user)
-        
+
         status_filter = self.request.query_params.get("status")
         if status_filter:
             queryset = queryset.filter(status=status_filter)
-        
+
         type_filter = self.request.query_params.get("transaction_type")
         if type_filter:
             queryset = queryset.filter(transaction_type=type_filter)
-        
+
         return queryset.select_related("payment_method", "provider")
 
     def get_serializer_class(self):
@@ -448,7 +457,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], url_path="initiate")
     def initiate_payment(self, request):
         """Create a Transaction and initialize payment with the provider (Chapa)."""
-        serializer = PaymentInitiationSerializer(data=request.data, context={"request": request})
+        serializer = PaymentInitiationSerializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
 
         provider = serializer.validated_data["provider"]
@@ -484,18 +495,25 @@ class TransactionViewSet(viewsets.ModelViewSet):
             phone_number=getattr(user, "phone_number", ""),
             tx_ref=str(transaction_obj.id),
             callback_url=request.build_absolute_uri("/api/v1/payments/webhooks/chapa/"),
-            return_url=request.build_absolute_uri(f"/api/v1/payments/transactions/{transaction_obj.id}/"),
+            return_url=request.build_absolute_uri(
+                f"/api/v1/payments/transactions/{transaction_obj.id}/"
+            ),
             description=description,
             metadata=metadata,
         )
 
         if result.success:
             transaction_obj.status = Transaction.Status.PROCESSING
-            transaction_obj.provider_transaction_id = result.provider_transaction_id or transaction_obj.provider_transaction_id
-            transaction_obj.metadata.update({
-                "checkout_url": result.checkout_url,
-                "provider_response": result.raw_response,
-            })
+            transaction_obj.provider_transaction_id = (
+                result.provider_transaction_id
+                or transaction_obj.provider_transaction_id
+            )
+            transaction_obj.metadata.update(
+                {
+                    "checkout_url": result.checkout_url,
+                    "provider_response": result.raw_response,
+                }
+            )
             transaction_obj.save()
             return Response(
                 {
@@ -536,7 +554,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
         try:
             transaction_obj = Transaction.objects.get(id=tx_ref, user=request.user)
         except Transaction.DoesNotExist:
-            return Response({"error": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         payment_service = get_payment_service_from_provider(transaction_obj.provider)
         result = payment_service.verify_payment(tx_ref)
@@ -544,17 +564,21 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if result.verified:
             transaction_obj.status = Transaction.Status.SUCCEEDED
             transaction_obj.provider_fee = result.provider_fee
-            transaction_obj.metadata.update({
-                "verification_result": result.raw_response,
-            })
+            transaction_obj.metadata.update(
+                {
+                    "verification_result": result.raw_response,
+                }
+            )
             transaction_obj.save()
         else:
             # Keep existing status if already succeeded; otherwise mark failed with message
             if transaction_obj.status != Transaction.Status.SUCCEEDED:
                 transaction_obj.mark_as_failed(result.message or "Verification failed")
-            transaction_obj.metadata.update({
-                "verification_result": result.raw_response,
-            })
+            transaction_obj.metadata.update(
+                {
+                    "verification_result": result.raw_response,
+                }
+            )
             transaction_obj.save()
 
         return Response(TransactionSerializer(transaction_obj).data)
@@ -576,17 +600,19 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def process(self, request, pk=None):
         """Process a pending transaction."""
         transaction_obj = self.get_object()
-        
+
         if transaction_obj.status != Transaction.Status.PENDING:
             return Response(
                 {"error": "Transaction is not in pending status"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         try:
             # Get payment service for the provider
-            payment_service = get_payment_service_from_provider(transaction_obj.provider)
-            
+            payment_service = get_payment_service_from_provider(
+                transaction_obj.provider
+            )
+
             # Initialize payment with the provider
             user = transaction_obj.user
             result = payment_service.initialize_payment(
@@ -597,26 +623,32 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 last_name=user.last_name or "User",
                 phone_number=getattr(user, "phone_number", ""),
                 tx_ref=str(transaction_obj.id),
-                callback_url=request.build_absolute_uri(f"/api/v1/payments/webhooks/chapa/"),
-                return_url=request.build_absolute_uri(f"/api/v1/payments/transactions/{transaction_obj.id}/"),
+                callback_url=request.build_absolute_uri(
+                    f"/api/v1/payments/webhooks/chapa/"
+                ),
+                return_url=request.build_absolute_uri(
+                    f"/api/v1/payments/transactions/{transaction_obj.id}/"
+                ),
                 description=transaction_obj.description,
                 metadata=transaction_obj.metadata,
             )
-            
+
             if result.success:
                 # Update transaction with provider details
                 transaction_obj.provider_transaction_id = result.provider_transaction_id
                 transaction_obj.status = Transaction.Status.PROCESSING
-                transaction_obj.metadata.update({
-                    "checkout_url": result.checkout_url,
-                    "provider_response": result.raw_response,
-                })
+                transaction_obj.metadata.update(
+                    {
+                        "checkout_url": result.checkout_url,
+                        "provider_response": result.raw_response,
+                    }
+                )
                 transaction_obj.save()
-                
+
                 serializer = self.get_serializer(transaction_obj)
                 response_data = serializer.data
                 response_data["checkout_url"] = result.checkout_url
-                
+
                 return Response(response_data)
             else:
                 # Mark transaction as failed
@@ -625,7 +657,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     {"error": result.message, "error_code": result.error_code},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        
+
         except Exception as e:
             # Mark transaction as failed and log error
             transaction_obj.mark_as_failed(f"Payment processing error: {str(e)}")
@@ -662,15 +694,17 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def refund(self, request, pk=None):
         """Process a refund for a transaction."""
         transaction_obj = self.get_object()
-        
+
         serializer = RefundTransactionSerializer(
             data=request.data, context={"transaction": transaction_obj}
         )
         serializer.is_valid(raise_exception=True)
-        
-        refund_amount = serializer.validated_data.get("amount") or transaction_obj.amount
+
+        refund_amount = (
+            serializer.validated_data.get("amount") or transaction_obj.amount
+        )
         reason = serializer.validated_data.get("reason", "")
-        
+
         # Create refund transaction
         refund_transaction = Transaction.objects.create(
             user=transaction_obj.user,
@@ -691,7 +725,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             processed_at=timezone.now(),
             provider_transaction_id=f"refund_{transaction_obj.provider_transaction_id}",
         )
-        
+
         # Update original transaction status if fully refunded
         if refund_amount == transaction_obj.amount:
             transaction_obj.status = Transaction.Status.REFUNDED
@@ -699,7 +733,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         elif refund_amount < transaction_obj.amount:
             transaction_obj.status = Transaction.Status.PARTIALLY_REFUNDED
             transaction_obj.save()
-        
+
         refund_serializer = self.get_serializer(refund_transaction)
         return Response(refund_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -788,7 +822,7 @@ class CartViewSet(viewsets.ModelViewSet):
     - Stock validation on item addition
     - Inventory tracking and updates
     """
-    
+
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated, IsUserOwnerOrReadOnly]
 
@@ -832,7 +866,7 @@ class CartViewSet(viewsets.ModelViewSet):
             status=Cart.Status.ACTIVE,
             defaults={"currency": "USD"},
         )
-        
+
         serializer = self.get_serializer(cart)
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         return Response(serializer.data, status=status_code)
@@ -873,21 +907,19 @@ class CartViewSet(viewsets.ModelViewSet):
     def add_item(self, request, pk=None):
         """Add an item to the cart."""
         cart = self.get_object()
-        
+
         serializer = AddToCartSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         product = serializer.validated_data["product"]
         variant = serializer.validated_data.get("variant")
         quantity = serializer.validated_data["quantity"]
         custom_attributes = serializer.validated_data.get("custom_attributes", {})
         notes = serializer.validated_data.get("notes", "")
-        
+
         # Check if item already exists in cart
-        existing_item = cart.items.filter(
-            product=product, variant=variant
-        ).first()
-        
+        existing_item = cart.items.filter(product=product, variant=variant).first()
+
         if existing_item:
             # Update existing item quantity
             existing_item.quantity += quantity
@@ -907,7 +939,7 @@ class CartViewSet(viewsets.ModelViewSet):
                 custom_attributes=custom_attributes,
                 notes=notes,
             )
-        
+
         cart_serializer = self.get_serializer(cart)
         return Response(cart_serializer.data)
 
@@ -928,7 +960,7 @@ class CartViewSet(viewsets.ModelViewSet):
         """Clear all items from the cart."""
         cart = self.get_object()
         cart.clear()
-        
+
         serializer = self.get_serializer(cart)
         return Response(serializer.data)
 
@@ -1030,7 +1062,7 @@ class CartItemViewSet(viewsets.ModelViewSet):
     - Inventory validation and stock checking
     - Price validation against current product pricing
     """
-    
+
     serializer_class = CartItemSerializer
     permission_classes = [IsAuthenticated]
 
@@ -1050,9 +1082,9 @@ class CartItemViewSet(viewsets.ModelViewSet):
             ).select_related("product", "variant")
         else:
             # When accessed directly
-            return CartItem.objects.filter(
-                cart__user=user
-            ).select_related("product", "variant", "cart")
+            return CartItem.objects.filter(cart__user=user).select_related(
+                "product", "variant", "cart"
+            )
 
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
@@ -1066,9 +1098,7 @@ class CartItemViewSet(viewsets.ModelViewSet):
         """Create cart item in the specified cart."""
         cart_id = self.kwargs.get("cart_pk")
         if cart_id:
-            cart = get_object_or_404(
-                Cart, id=cart_id, user=self.request.user
-            )
+            cart = get_object_or_404(Cart, id=cart_id, user=self.request.user)
             serializer.save(cart=cart)
         else:
             # If no cart specified, use or create current active cart
@@ -1082,10 +1112,10 @@ class CartItemViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         """Update cart item with validation."""
         cart_item = self.get_object()
-        
+
         # Validate stock availability for new quantity
         new_quantity = serializer.validated_data.get("quantity", cart_item.quantity)
-        
+
         if cart_item.variant:
             if cart_item.variant.stock_quantity < new_quantity:
                 raise serializers.ValidationError(
@@ -1099,5 +1129,5 @@ class CartItemViewSet(viewsets.ModelViewSet):
                 raise serializers.ValidationError(
                     "Not enough stock available for product."
                 )
-        
+
         serializer.save()

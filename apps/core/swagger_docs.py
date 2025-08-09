@@ -67,7 +67,7 @@ from rest_framework import status
 class SwaggerTags:
     """
     🎯 Organized API Tags for Optimal Developer Experience
-    
+
     Tags are strategically ordered to follow the typical user/developer journey:
     1. Start with authentication (essential for most operations)
     2. User management and profiles
@@ -76,58 +76,58 @@ class SwaggerTags:
     5. Shopping and cart management
     6. Payment processing
     7. System utilities and testing
-    
+
     Each tag includes emojis for visual recognition and priority numbers for sorting.
     """
-    
+
     # 🔐 AUTHENTICATION & ACCOUNT MANAGEMENT (Priority 1)
     AUTHENTICATION = "01 🔐 Authentication"
-    EMAIL_VERIFICATION = "02 � Email Verification"  
+    EMAIL_VERIFICATION = "02 � Email Verification"
     PASSWORD_MANAGEMENT = "03 🔑 Password Management"
     TOKEN_MANAGEMENT = "04 🎫 Token Management"
-    
+
     # 👤 USER MANAGEMENT (Priority 2)
     USER_PROFILE = "05 👤 User Profile"
     USER_ADDRESSES = "06 🏠 User Addresses"
     USER_ACTIVITY = "07 � User Activity"
-    
+
     # 🛡️ ADMIN OPERATIONS (Priority 3)
     ADMIN_USER_MANAGEMENT = "08 🛡️ Admin - User Management"
     ADMIN_PRODUCT_MANAGEMENT = "09 🛡️ Admin - Product Management"
     ADMIN_ANALYTICS = "10 🛡️ Admin - Analytics"
-    
+
     # 📂 CATALOG MANAGEMENT (Priority 4)
     CATEGORIES = "11 📂 Categories"
     TAGS = "12 🏷️ Tags"
-    
+
     # 📦 PRODUCT MANAGEMENT (Priority 5)
     PRODUCTS = "13 📦 Products"
     PRODUCT_VARIANTS = "14 � Product Variants"
     PRODUCT_IMAGES = "15 �️ Product Images"
     VARIANT_OPTIONS = "16 ⚙️ Variant Options"
-    
+
     # 🛒 SHOPPING EXPERIENCE (Priority 6)
     PRODUCT_DISCOVERY = "17 � Product Discovery"
     PRODUCT_SEARCH = "18 🔎 Search & Filters"
     SHOPPING_CART = "19 🛒 Shopping Cart"
     CART_MANAGEMENT = "20 �️ Cart Management"
-    
+
     # 💳 PAYMENT & CHECKOUT (Priority 7)
     PAYMENT_PROVIDERS = "21 🏦 Payment Providers"
     PAYMENT_METHODS = "22 💳 Payment Methods"
     TRANSACTIONS = "23 � Transactions"
     PAYMENT_WEBHOOKS = "24 � Payment Webhooks"
     PAYMENT_CALLBACKS = "25 � Payment Callbacks"
-    
+
     # 🔧 SYSTEM & UTILITIES (Priority 8)
     SYSTEM_HEALTH = "26 🏥 System Health"
     API_TESTING = "27 🧪 API Testing"
     UTILITIES = "28 🔧 Utilities"
-    
+
     # 📚 DOCUMENTATION & GUIDES (Priority 9)
     TESTING_GUIDES = "29 📚 Testing Guides"
     API_DOCUMENTATION = "30 📖 API Documentation"
-    
+
     # ⚠️ Legacy tags (for backward compatibility - marked for migration)
     USERS = USER_PROFILE  # Redirect to new tag
     PAYMENT = PAYMENT_PROVIDERS  # Redirect to new tag
@@ -139,8 +139,8 @@ TAG_DESCRIPTIONS = {
         "description": "Core authentication endpoints for user login, registration, and session management. Start here for API access.",
         "external_docs": {
             "description": "Authentication Guide",
-            "url": "https://docs.bazary.com/auth"
-        }
+            "url": "https://docs.bazary.com/auth",
+        },
     },
     SwaggerTags.EMAIL_VERIFICATION: {
         "description": "Email verification and account activation endpoints. Required for new user accounts.",
@@ -175,9 +175,9 @@ TAG_DESCRIPTIONS = {
     SwaggerTags.PRODUCTS: {
         "description": "Core product management with CRUD operations, search, and filtering capabilities.",
         "external_docs": {
-            "description": "Product API Guide", 
-            "url": "https://docs.bazary.com/products"
-        }
+            "description": "Product API Guide",
+            "url": "https://docs.bazary.com/products",
+        },
     },
     SwaggerTags.PRODUCT_VARIANTS: {
         "description": "Product variant management for size, color, and other product options.",

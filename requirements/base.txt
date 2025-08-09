@@ -1,6 +1,7 @@
 # Base requirements for all environments
 Django>=5.0.0,<5.1.0
 djangorestframework>=3.14.0
+djangorestframework-nested>=0.0.4
 psycopg2-binary>=2.9.5
 python-decouple>=3.8
 dj-database-url>=2.1.0

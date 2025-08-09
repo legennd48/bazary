@@ -16,6 +16,7 @@ from rest_framework.routers import DefaultRouter
 
 try:
     from rest_framework_nested import routers
+
     NESTED_ROUTERS_AVAILABLE = True
 except ImportError:
     NESTED_ROUTERS_AVAILABLE = False

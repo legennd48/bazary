@@ -21,12 +21,28 @@ from drf_spectacular.utils import (
     extend_schema,
     extend_schema_view,
 )
-from rest_framework import serializers, status, viewsets
+from rest_framework import serializers, status, viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.permissions import IsOwnerOrReadOnly
+from apps.core.swagger_docs import SwaggerTags
+
+
+class IsUserOwnerOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission for objects that use 'user' field instead of 'owner'.
+    Works for PaymentMethod, Transaction, Cart, etc.
+    """
+    
+    def has_object_permission(self, request, view, obj):
+        # Read permissions for all authenticated users
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        # Write permissions only for the object owner
+        return obj.user == request.user
 
 from .models import Cart, CartItem, PaymentMethod, PaymentProvider, Transaction
 from .serializers import (
@@ -39,6 +55,9 @@ from .serializers import (
     PaymentMethodCreateSerializer,
     PaymentMethodSerializer,
     PaymentProviderSerializer,
+    PaymentInitiationSerializer,
+    PaymentInitiationResponseSerializer,
+    PaymentVerificationRequestSerializer,
     RefundTransactionSerializer,
     TransactionCreateSerializer,
     TransactionSerializer,
@@ -80,7 +99,7 @@ from .services.factory import get_payment_service_from_provider
                 ],
             )
         },
-        tags=["Payment Providers"],
+        tags=[SwaggerTags.PAYMENT_PROVIDERS],
     ),
     retrieve=extend_schema(
         summary="Get payment provider details",
@@ -89,15 +108,24 @@ from .services.factory import get_payment_service_from_provider
             200: PaymentProviderSerializer,
             404: OpenApiResponse(description="Payment provider not found"),
         },
-        tags=["Payment Providers"],
+        tags=[SwaggerTags.PAYMENT_PROVIDERS],
     ),
 )
 class PaymentProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Payment provider management viewset.
-    
-    Provides read-only access to payment provider information.
-    Only active providers are returned to users.
+    ## Payment Provider Information
+
+    Get information about available payment providers and their capabilities.
+
+    ### 💳 Features
+    - **Provider List**: View all active payment providers
+    - **Provider Details**: Get detailed information about specific providers
+    - **Configuration**: See supported payment methods and currencies
+    - **Status**: Only active and available providers are shown
+
+    ### 🔐 Access
+    - Authenticated users only
+    - Read-only access to provider information
     """
     
     queryset = PaymentProvider.objects.filter(is_active=True)
@@ -138,7 +166,7 @@ class PaymentProviderViewSet(viewsets.ReadOnlyModelViewSet):
                 ],
             )
         },
-        tags=["Payment Methods"],
+        tags=[SwaggerTags.PAYMENT_METHODS],
     ),
     create=extend_schema(
         summary="Add new payment method",
@@ -160,7 +188,7 @@ class PaymentProviderViewSet(viewsets.ReadOnlyModelViewSet):
                 },
             )
         ],
-        tags=["Payment Methods"],
+        tags=[SwaggerTags.PAYMENT_METHODS],
     ),
     retrieve=extend_schema(
         summary="Get payment method details",
@@ -169,7 +197,7 @@ class PaymentProviderViewSet(viewsets.ReadOnlyModelViewSet):
             200: PaymentMethodSerializer,
             404: OpenApiResponse(description="Payment method not found"),
         },
-        tags=["Payment Methods"],
+        tags=[SwaggerTags.PAYMENT_METHODS],
     ),
     update=extend_schema(
         summary="Update payment method",
@@ -179,7 +207,7 @@ class PaymentProviderViewSet(viewsets.ReadOnlyModelViewSet):
             400: OpenApiResponse(description="Invalid payment method data"),
             404: OpenApiResponse(description="Payment method not found"),
         },
-        tags=["Payment Methods"],
+        tags=[SwaggerTags.PAYMENT_METHODS],
     ),
     destroy=extend_schema(
         summary="Delete payment method",
@@ -188,23 +216,40 @@ class PaymentProviderViewSet(viewsets.ReadOnlyModelViewSet):
             204: OpenApiResponse(description="Payment method deleted successfully"),
             404: OpenApiResponse(description="Payment method not found"),
         },
-        tags=["Payment Methods"],
+        tags=[SwaggerTags.PAYMENT_METHODS],
     ),
 )
 class PaymentMethodViewSet(viewsets.ModelViewSet):
     """
-    Payment method management viewset.
-    
-    Allows users to manage their saved payment methods including
-    credit cards, digital wallets, and other payment options.
+    ## Payment Method Management
+
+    Manage saved payment methods including credit cards, digital wallets, and bank accounts.
+
+    ### 💳 Features
+    - **Save Payment Methods**: Securely store payment method details
+    - **Multiple Methods**: Support for various payment types (cards, wallets, etc.)
+    - **Default Methods**: Set preferred payment method
+    - **Method Status**: Activate/deactivate payment methods
+    - **Expiry Tracking**: Monitor card expiration dates
+
+    ### 🔐 Security
+    - Users can only access their own payment methods
+    - Sensitive data is tokenized and encrypted
+    - PCI DSS compliant storage
     """
     
     serializer_class = PaymentMethodSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsUserOwnerOrReadOnly]
 
     def get_queryset(self):
         """Return payment methods for the current user."""
-        return PaymentMethod.objects.filter(user=self.request.user)
+        # Avoid evaluating with AnonymousUser during schema generation
+        if getattr(self, "swagger_fake_view", False):  # drf_yasg schema generation
+            return PaymentMethod.objects.none()
+        user = getattr(self.request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return PaymentMethod.objects.none()
+        return PaymentMethod.objects.filter(user=user)
 
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
@@ -222,7 +267,7 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
             ),
             404: OpenApiResponse(description="Payment method not found"),
         },
-        tags=["Payment Methods"],
+        tags=[SwaggerTags.PAYMENT_METHODS],
     )
     @action(detail=True, methods=["post"])
     def set_default(self, request, pk=None):
@@ -292,7 +337,7 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
                 ],
             )
         },
-        tags=["Transactions"],
+        tags=[SwaggerTags.TRANSACTIONS],
     ),
     create=extend_schema(
         summary="Create new transaction",
@@ -316,7 +361,7 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
                 },
             )
         ],
-        tags=["Transactions"],
+        tags=[SwaggerTags.TRANSACTIONS],
     ),
     retrieve=extend_schema(
         summary="Get transaction details",
@@ -325,24 +370,48 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
             200: TransactionSerializer,
             404: OpenApiResponse(description="Transaction not found"),
         },
-        tags=["Transactions"],
+        tags=[SwaggerTags.TRANSACTIONS],
     ),
 )
 class TransactionViewSet(viewsets.ModelViewSet):
     """
-    Payment transaction management viewset.
-    
-    Allows users to view their transaction history and create new transactions.
-    Supports filtering by status and transaction type.
+    ## Payment Transaction Management
+
+    View transaction history and process new payments.
+
+    ### 💰 Features
+    - **Transaction History**: View all payment transactions
+    - **Transaction Details**: Get detailed information about specific payments
+    - **Create Payments**: Process new payments using saved methods
+    - **Status Tracking**: Monitor payment processing status
+    - **Filtering**: Filter by status, type, date range
+    - **Refund Support**: Handle refunds and partial refunds
+
+    ### 📊 Transaction Types
+    - **Payment**: Regular purchase transactions
+    - **Refund**: Full transaction refunds
+    - **Partial Refund**: Partial amount refunds
+    - **Chargeback**: Disputed transaction handling
+
+    ### 🔐 Security
+    - Users can only access their own transactions
+    - Secure payment processing
+    - Complete audit trail
     """
     
     serializer_class = TransactionSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsUserOwnerOrReadOnly]
     http_method_names = ["get", "post", "options", "head"]
 
     def get_queryset(self):
         """Return transactions for the current user with optional filtering."""
-        queryset = Transaction.objects.filter(user=self.request.user)
+        # Avoid evaluating with AnonymousUser during schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return Transaction.objects.none()
+        user = getattr(self.request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return Transaction.objects.none()
+        queryset = Transaction.objects.filter(user=user)
         
         status_filter = self.request.query_params.get("status")
         if status_filter:
@@ -361,6 +430,136 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
     @extend_schema(
+        summary="Initiate payment (Chapa)",
+        description=(
+            "Initiate a payment using the configured provider (defaults to Chapa).\n\n"
+            "You can pass an amount/currency directly or a cart_id to derive totals."
+        ),
+        request=PaymentInitiationSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=PaymentInitiationResponseSerializer,
+                description="Payment initialized; checkout URL included when applicable",
+            ),
+            400: OpenApiResponse(description="Invalid initiation request"),
+        },
+        tags=[SwaggerTags.TRANSACTIONS],
+    )
+    @action(detail=False, methods=["post"], url_path="initiate")
+    def initiate_payment(self, request):
+        """Create a Transaction and initialize payment with the provider (Chapa)."""
+        serializer = PaymentInitiationSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        provider = serializer.validated_data["provider"]
+        amount = serializer.validated_data["amount"]
+        currency = serializer.validated_data.get("currency", "ETB")
+        description = serializer.validated_data.get("description", "")
+        reference = serializer.validated_data.get("reference", "")
+        metadata = serializer.validated_data.get("metadata", {})
+
+        # Create a pending transaction record
+        transaction_obj = Transaction.objects.create(
+            user=request.user,
+            provider=provider,
+            transaction_type=Transaction.TransactionType.PAYMENT,
+            status=Transaction.Status.PENDING,
+            amount=amount,
+            currency=currency,
+            description=description,
+            reference=reference,
+            metadata=metadata,
+            provider_transaction_id=f"txn_{request.user.id}_{timezone.now().timestamp()}",
+        )
+
+        # Initialize payment with provider (Chapa)
+        payment_service = get_payment_service_from_provider(provider)
+        user = request.user
+        result = payment_service.initialize_payment(
+            amount=amount,
+            currency=currency,
+            email=user.email,
+            first_name=getattr(user, "first_name", "") or "Customer",
+            last_name=getattr(user, "last_name", "") or "User",
+            phone_number=getattr(user, "phone_number", ""),
+            tx_ref=str(transaction_obj.id),
+            callback_url=request.build_absolute_uri("/api/v1/payments/webhooks/chapa/"),
+            return_url=request.build_absolute_uri(f"/api/v1/payments/transactions/{transaction_obj.id}/"),
+            description=description,
+            metadata=metadata,
+        )
+
+        if result.success:
+            transaction_obj.status = Transaction.Status.PROCESSING
+            transaction_obj.provider_transaction_id = result.provider_transaction_id or transaction_obj.provider_transaction_id
+            transaction_obj.metadata.update({
+                "checkout_url": result.checkout_url,
+                "provider_response": result.raw_response,
+            })
+            transaction_obj.save()
+            return Response(
+                {
+                    "transaction_id": str(transaction_obj.id),
+                    "status": transaction_obj.status,
+                    "checkout_url": result.checkout_url,
+                    "provider": provider.provider_type,
+                    "message": result.message,
+                }
+            )
+        else:
+            transaction_obj.mark_as_failed(result.message)
+            return Response(
+                {"error": result.message, "error_code": result.error_code},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    @extend_schema(
+        summary="Verify payment (Chapa)",
+        description="Verify a payment by transaction ID (tx_ref) and update its status accordingly.",
+        request=PaymentVerificationRequestSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=TransactionSerializer,
+                description="Verification result with updated transaction",
+            ),
+            404: OpenApiResponse(description="Transaction not found"),
+        },
+        tags=[SwaggerTags.TRANSACTIONS],
+    )
+    @action(detail=False, methods=["post"], url_path="verify")
+    def verify_payment(self, request):
+        """Verify payment status from provider (Chapa) and persist updates."""
+        serializer = PaymentVerificationRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        tx_ref = str(serializer.validated_data["tx_ref"])  # UUID to str
+
+        try:
+            transaction_obj = Transaction.objects.get(id=tx_ref, user=request.user)
+        except Transaction.DoesNotExist:
+            return Response({"error": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        payment_service = get_payment_service_from_provider(transaction_obj.provider)
+        result = payment_service.verify_payment(tx_ref)
+
+        if result.verified:
+            transaction_obj.status = Transaction.Status.SUCCEEDED
+            transaction_obj.provider_fee = result.provider_fee
+            transaction_obj.metadata.update({
+                "verification_result": result.raw_response,
+            })
+            transaction_obj.save()
+        else:
+            # Keep existing status if already succeeded; otherwise mark failed with message
+            if transaction_obj.status != Transaction.Status.SUCCEEDED:
+                transaction_obj.mark_as_failed(result.message or "Verification failed")
+            transaction_obj.metadata.update({
+                "verification_result": result.raw_response,
+            })
+            transaction_obj.save()
+
+        return Response(TransactionSerializer(transaction_obj).data)
+
+    @extend_schema(
         summary="Process transaction payment",
         description="Process the payment for a pending transaction through the payment provider.",
         responses={
@@ -371,7 +570,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             400: OpenApiResponse(description="Transaction cannot be processed"),
             404: OpenApiResponse(description="Transaction not found"),
         },
-        tags=["Transactions"],
+        tags=[SwaggerTags.TRANSACTIONS],
     )
     @action(detail=True, methods=["post"])
     def process(self, request, pk=None):
@@ -457,7 +656,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 value={"amount": "50.00", "reason": "Partial product return"},
             ),
         ],
-        tags=["Transactions"],
+        tags=[SwaggerTags.TRANSACTIONS],
     )
     @action(detail=True, methods=["post"])
     def refund(self, request, pk=None):
@@ -515,7 +714,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 description="List of user carts",
             )
         },
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
     create=extend_schema(
         summary="Create new cart",
@@ -528,7 +727,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 description="Existing active cart returned",
             ),
         },
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
     retrieve=extend_schema(
         summary="Get cart details",
@@ -537,7 +736,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             200: CartSerializer,
             404: OpenApiResponse(description="Cart not found"),
         },
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
     update=extend_schema(
         summary="Update cart",
@@ -547,7 +746,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             400: OpenApiResponse(description="Invalid cart data"),
             404: OpenApiResponse(description="Cart not found"),
         },
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
     destroy=extend_schema(
         summary="Delete cart",
@@ -556,23 +755,52 @@ class TransactionViewSet(viewsets.ModelViewSet):
             204: OpenApiResponse(description="Cart deleted successfully"),
             404: OpenApiResponse(description="Cart not found"),
         },
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
 )
 class CartViewSet(viewsets.ModelViewSet):
     """
-    Shopping cart management viewset.
-    
-    Allows users to create and manage their shopping carts.
-    Supports adding/removing items and calculating totals.
+    ## Shopping Cart Management
+
+    Create and manage shopping carts with comprehensive item handling.
+
+    ### 🛒 Core Features
+    - **Create Cart**: Get or create user's active shopping cart
+    - **View Cart**: See cart details with all items and totals
+    - **Update Cart**: Modify cart settings like currency and notes
+    - **Delete Cart**: Remove cart and all its items
+
+    ### 🛍️ Item Management
+    - **Add Items**: Add products and variants to cart
+    - **Update Quantities**: Modify item quantities
+    - **Remove Items**: Delete specific items from cart
+    - **Clear Cart**: Remove all items at once
+
+    ### 💰 Price Calculation
+    - **Subtotal**: Sum of all item prices
+    - **Tax Calculation**: Automatic tax computation
+    - **Shipping Costs**: Shipping fee calculation
+    - **Discounts**: Apply promotional discounts
+    - **Total**: Final cart total with all fees
+
+    ### 🔐 Security
+    - Users can only access their own carts
+    - Stock validation on item addition
+    - Inventory tracking and updates
     """
     
     serializer_class = CartSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsUserOwnerOrReadOnly]
 
     def get_queryset(self):
         """Return carts for the current user."""
-        return Cart.objects.filter(user=self.request.user).prefetch_related(
+        # Avoid evaluating with AnonymousUser during schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return Cart.objects.none()
+        user = getattr(self.request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return Cart.objects.none()
+        return Cart.objects.filter(user=user).prefetch_related(
             "items__product", "items__variant"
         )
 
@@ -594,7 +822,7 @@ class CartViewSet(viewsets.ModelViewSet):
                 description="New cart created",
             ),
         },
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     )
     @action(detail=False, methods=["get"])
     def current(self, request):
@@ -639,7 +867,7 @@ class CartViewSet(viewsets.ModelViewSet):
                 },
             ),
         ],
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     )
     @action(detail=True, methods=["post"])
     def add_item(self, request, pk=None):
@@ -693,7 +921,7 @@ class CartViewSet(viewsets.ModelViewSet):
             ),
             404: OpenApiResponse(description="Cart not found"),
         },
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     )
     @action(detail=True, methods=["post"])
     def clear(self, request, pk=None):
@@ -711,7 +939,7 @@ class CartViewSet(viewsets.ModelViewSet):
             200: CartSummarySerializer,
             404: OpenApiResponse(description="Cart not found"),
         },
-        tags=["Shopping Cart"],
+        tags=[SwaggerTags.SHOPPING_CART],
     )
     @action(detail=True, methods=["get"])
     def summary(self, request, pk=None):
@@ -731,7 +959,7 @@ class CartViewSet(viewsets.ModelViewSet):
                 description="List of cart items",
             )
         },
-        tags=["Cart Items"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
     create=extend_schema(
         summary="Add item to cart",
@@ -741,7 +969,7 @@ class CartViewSet(viewsets.ModelViewSet):
             201: CartItemSerializer,
             400: OpenApiResponse(description="Invalid item data"),
         },
-        tags=["Cart Items"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
     retrieve=extend_schema(
         summary="Get cart item details",
@@ -750,7 +978,7 @@ class CartViewSet(viewsets.ModelViewSet):
             200: CartItemSerializer,
             404: OpenApiResponse(description="Cart item not found"),
         },
-        tags=["Cart Items"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
     update=extend_schema(
         summary="Update cart item",
@@ -761,7 +989,7 @@ class CartViewSet(viewsets.ModelViewSet):
             400: OpenApiResponse(description="Invalid item data"),
             404: OpenApiResponse(description="Cart item not found"),
         },
-        tags=["Cart Items"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
     destroy=extend_schema(
         summary="Remove item from cart",
@@ -770,15 +998,37 @@ class CartViewSet(viewsets.ModelViewSet):
             204: OpenApiResponse(description="Item removed successfully"),
             404: OpenApiResponse(description="Cart item not found"),
         },
-        tags=["Cart Items"],
+        tags=[SwaggerTags.SHOPPING_CART],
     ),
 )
 class CartItemViewSet(viewsets.ModelViewSet):
     """
-    Cart item management viewset.
-    
-    Allows users to manage individual items within their shopping carts.
-    Supports quantity updates and item removal.
+    ## Cart Item Management
+
+    Manage individual items within shopping carts with detailed control.
+
+    ### 🛍️ Item Operations
+    - **Add Items**: Add new products or variants to cart
+    - **View Items**: Get detailed information about cart items
+    - **Update Items**: Modify quantity, attributes, or notes
+    - **Remove Items**: Delete specific items from cart
+
+    ### 📦 Product Support
+    - **Simple Products**: Add basic products to cart
+    - **Product Variants**: Support for size, color, and custom attributes
+    - **Custom Attributes**: Store additional item specifications
+    - **Item Notes**: Add special instructions or notes
+
+    ### 💰 Pricing Features
+    - **Unit Price**: Individual item pricing
+    - **Quantity**: Item quantity management
+    - **Total Price**: Calculated item total (quantity × unit price)
+    - **Stock Validation**: Ensure sufficient inventory
+
+    ### 🔐 Security
+    - Users can only manage items in their own carts
+    - Inventory validation and stock checking
+    - Price validation against current product pricing
     """
     
     serializer_class = CartItemSerializer
@@ -786,16 +1036,22 @@ class CartItemViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return cart items for the current user's carts."""
+        # Avoid evaluating with AnonymousUser during schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return CartItem.objects.none()
+        user = getattr(self.request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return CartItem.objects.none()
         cart_id = self.kwargs.get("cart_pk")
         if cart_id:
             # When accessed through nested route
             return CartItem.objects.filter(
-                cart_id=cart_id, cart__user=self.request.user
+                cart_id=cart_id, cart__user=user
             ).select_related("product", "variant")
         else:
             # When accessed directly
             return CartItem.objects.filter(
-                cart__user=self.request.user
+                cart__user=user
             ).select_related("product", "variant", "cart")
 
     def get_serializer_class(self):

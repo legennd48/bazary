@@ -12,11 +12,14 @@ from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from apps.core.swagger_docs import SwaggerTags
 from .models import PaymentProvider, Transaction
 from .services.factory import get_payment_service_from_provider
 
@@ -106,6 +109,68 @@ class ChapaWebhookView(View):
             return HttpResponse("Internal Server Error", status=500)
 
 
+@swagger_auto_schema(
+    method="post",
+    tags=[SwaggerTags.PAYMENT_PROVIDERS],
+    operation_summary="Chapa Webhook API",
+    operation_description="""
+    Handle Chapa payment webhooks with JSON responses.
+    
+    ### Webhook Events:
+    - Payment successful
+    - Payment failed
+    - Payment pending
+    - Refund processed
+    
+    ### Security:
+    - Webhook signature verification
+    - Payload validation
+    - Secure transaction processing
+    
+    ### Response Format:
+    - JSON responses for all scenarios
+    - Detailed error messages
+    - Transaction status updates
+    """,
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "tx_ref": openapi.Schema(type=openapi.TYPE_STRING, description="Transaction reference"),
+            "status": openapi.Schema(type=openapi.TYPE_STRING, description="Payment status"),
+            "amount": openapi.Schema(type=openapi.TYPE_NUMBER, description="Payment amount"),
+            "currency": openapi.Schema(type=openapi.TYPE_STRING, description="Payment currency"),
+        },
+    ),
+    responses={
+        200: openapi.Response(
+            "Webhook processed successfully",
+            examples={
+                "application/json": {
+                    "success": True,
+                    "message": "Webhook processed successfully",
+                    "transaction_status": "completed"
+                }
+            },
+        ),
+        400: openapi.Response(
+            "Invalid webhook data",
+            examples={
+                "application/json": {
+                    "error": "Invalid webhook",
+                    "details": "Missing transaction reference"
+                }
+            },
+        ),
+        404: openapi.Response(
+            "Provider not found",
+            examples={
+                "application/json": {
+                    "error": "Chapa provider not found"
+                }
+            },
+        ),
+    },
+)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def chapa_webhook_api(request):

@@ -297,6 +297,86 @@ class UserAddressViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         tags=[SwaggerTags.AUTHENTICATION],
+        operation_summary="Get Address Details",
+        operation_description="""
+        Retrieve detailed information about a specific user address.
+        
+        ### Security:
+        - Users can only access their own addresses
+        - Returns 404 if address doesn't belong to the user
+        """,
+        responses={
+            200: openapi.Response("Address retrieved successfully", UserAddressSerializer),
+            404: openapi.Response("Address not found"),
+        },
+    )
+    def retrieve(self, request, *args, **kwargs):
+        """Get detailed address information."""
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.AUTHENTICATION],
+        operation_summary="Update Address (Full)",
+        operation_description="""
+        Update an address with complete data replacement.
+        
+        ### Note:
+        This is a full update (PUT) - all required fields should be provided.
+        For partial updates, use PATCH method instead.
+        """,
+        request_body=UserAddressSerializer,
+        responses={
+            200: openapi.Response("Address updated successfully", UserAddressSerializer),
+            400: openapi.Response("Validation error"),
+            404: openapi.Response("Address not found"),
+        },
+    )
+    def update(self, request, *args, **kwargs):
+        """Update address (full update)."""
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.AUTHENTICATION],
+        operation_summary="Update Address (Partial)",
+        operation_description="""
+        Update an address with partial data.
+        
+        ### Note:
+        This is a partial update (PATCH) - only provide fields to be updated.
+        All fields are optional.
+        """,
+        request_body=UserAddressSerializer,
+        responses={
+            200: openapi.Response("Address updated successfully", UserAddressSerializer),
+            400: openapi.Response("Validation error"),
+            404: openapi.Response("Address not found"),
+        },
+    )
+    def partial_update(self, request, *args, **kwargs):
+        """Update address (partial update)."""
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.AUTHENTICATION],
+        operation_summary="Delete Address",
+        operation_description="""
+        Delete a user address permanently.
+        
+        ### Warning:
+        - This action cannot be undone
+        - If this is the default address, you may need to set another address as default
+        """,
+        responses={
+            204: openapi.Response("Address deleted successfully"),
+            404: openapi.Response("Address not found"),
+        },
+    )
+    def destroy(self, request, *args, **kwargs):
+        """Delete address."""
+        return super().destroy(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.AUTHENTICATION],
         operation_summary="Set Default Address",
         operation_description="""
         Set an address as the default for its type.

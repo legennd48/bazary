@@ -28,9 +28,29 @@ from apps.products.serializers import (
 
 class ProductManagementViewSet(viewsets.GenericViewSet):
     """
-    Advanced product management operations.
+    ## Advanced Product Management
 
-    Provides bulk operations, import/export, and media management.
+    Enhanced product management operations for administrators.
+
+    ### 🔧 Bulk Operations
+    - **Bulk Activate/Deactivate**: Mass enable/disable products
+    - **Bulk Delete**: Remove multiple products at once
+    - **Bulk Price Update**: Update pricing for multiple products
+    - **Bulk Category Change**: Move products between categories
+
+    ### 📊 Import/Export
+    - **Product Export**: Export product data to CSV/Excel
+    - **Product Import**: Bulk import products from files
+    - **Template Download**: Get import template files
+
+    ### 🖼️ Media Management
+    - **Bulk Image Upload**: Upload images for multiple products
+    - **Image Optimization**: Automatic image resizing and compression
+    - **Media Cleanup**: Remove unused product images
+
+    ### 🔐 Access
+    - Admin only access for all operations
+    - Complete audit logging for all changes
     """
 
     permission_classes = [IsAdminOrReadOnly]
@@ -38,7 +58,7 @@ class ProductManagementViewSet(viewsets.GenericViewSet):
     serializer_class = ProductBulkOperationSerializer  # Default serializer for Swagger
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Bulk Product Operations",
         operation_description="Perform bulk operations on multiple products",
         request_body=ProductBulkOperationSerializer,
@@ -135,7 +155,7 @@ class ProductManagementViewSet(viewsets.GenericViewSet):
             )
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.PRODUCT_IMAGES],
         operation_summary="Upload Product Images",
         operation_description="Upload multiple images for a product",
         manual_parameters=[
@@ -211,7 +231,7 @@ class ProductManagementViewSet(viewsets.GenericViewSet):
         )
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Import Products",
         operation_description="Import products from CSV or Excel file",
         manual_parameters=[
@@ -382,7 +402,7 @@ class ProductManagementViewSet(viewsets.GenericViewSet):
             )
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Export Products",
         operation_description="Export products to CSV or Excel format",
         query_serializer=ProductExportSerializer,

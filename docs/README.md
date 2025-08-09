@@ -6,14 +6,24 @@ A robust, scalable Django-based e-commerce backend system with advanced DevOps p
 
 ## 📖 Documentation Structure
 
-- **[Technical Architecture](./technical-architecture.md)** - System design and tech stack
-- **[API Documentation](./api-documentation.md)** - Complete API reference
-- **[DevOps Guide](./devops-guide.md)** - CI/CD, Docker, and deployment
+### 🚀 Quick Start Guides
+- **[Cart to Payment Guide](./cart-to-payment-guide.md)** - Complete workflow from adding products to payment completion
+- **[Shopping Cart Guide](./shopping-cart-guide.md)** - Complete guide for cart management and operations
 - **[Development Guide](./development-guide.md)** - Local setup and contribution guidelines
-- **[Database Schema](./database-schema.md)** - Data models and relationships
-- **[Security Guide](./security-guide.md)** - Security practices and authentication
-- **[Testing Strategy](./testing-strategy.md)** - Testing approach and coverage
 - **[Deployment Guide](./deployment-guide.md)** - Production deployment instructions
+
+### 🎯 Feature Documentation
+- **[Payment Integration Completion](./payment-integration-completion.md)** - Payment feature completion summary
+
+### 🛠️ Technical Documentation
+- **[Technical Architecture](./technical-architecture.md)** - System design and tech stack
+- **[Database Schema](./database-schema.md)** - Data models and relationships
+- **[DevOps Guide](./devops-guide.md)** - CI/CD, Docker, and deployment
+
+### 📋 Specialized Guides
+- **[Email Service Setup](./email-service-setup.md)** - Email configuration guides
+- **[User Management Enhancement](./user-management-enhancement.md)** - Advanced user features
+- **[Git Flow Guide](./git-flow-guide.md)** - Version control workflow
 
 ## 🚀 Quick Start
 
@@ -100,9 +110,9 @@ docker-compose up --build
 - [ ] Deploy to staging environment
 
 ### Phase 2: Enhanced Features
-- [ ] Shopping cart functionality
+- [x] Shopping cart functionality ✅
 - [ ] Order management system
-- [ ] Payment integration
+- [x] Payment integration (Chapa) ✅
 - [ ] Email notifications
 - [ ] Advanced search features
 

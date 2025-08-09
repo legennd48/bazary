@@ -10,6 +10,7 @@ This module contains all payment-related serializers including:
 """
 
 from decimal import Decimal
+from django.utils import timezone
 
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -312,6 +313,107 @@ class RefundTransactionSerializer(serializers.Serializer):
             )
         
         return attrs
+
+
+class PaymentInitiationSerializer(serializers.Serializer):
+    """
+    Serializer for initiating a payment with a provider (default: Chapa).
+    Allows either direct amount/currency or using an existing Cart ID to derive totals.
+    """
+
+    provider = serializers.PrimaryKeyRelatedField(
+        queryset=PaymentProvider.objects.filter(is_active=True),
+        required=False,
+        help_text="Payment provider ID (defaults to active Chapa provider)",
+    )
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        help_text="Payment amount when not using a cart",
+    )
+    currency = serializers.CharField(
+        max_length=3,
+        required=False,
+        default="ETB",
+        help_text="Currency code (ISO 4217), defaults to ETB",
+    )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Payment description",
+    )
+    reference = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Your internal reference (e.g., ORDER-123)",
+    )
+    metadata = serializers.DictField(
+        required=False,
+        default=dict,
+        help_text="Additional metadata to pass to the provider",
+    )
+    cart_id = serializers.UUIDField(
+        required=False,
+        help_text="Cart ID to derive amount/description automatically",
+    )
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        amount = attrs.get("amount")
+        cart_id = attrs.get("cart_id")
+
+        if not amount and not cart_id:
+            raise serializers.ValidationError("Provide either amount or cart_id.")
+
+        if cart_id:
+            try:
+                cart = Cart.objects.get(id=cart_id)
+            except Cart.DoesNotExist:
+                raise serializers.ValidationError("Cart not found.")
+            # If cart is tied to a user, ensure current user owns it
+            if cart.user and cart.user != user:
+                raise serializers.ValidationError("You do not own this cart.")
+            # Ensure totals are up-to-date
+            cart.calculate_totals()
+            attrs["amount"] = cart.total
+            attrs.setdefault("currency", cart.currency)
+            attrs.setdefault("description", attrs.get("description") or f"Cart payment {cart.id}")
+            # Attach cart id into metadata for traceability
+            meta = attrs.get("metadata", {})
+            meta.update({"cart_id": str(cart.id)})
+            attrs["metadata"] = meta
+
+        # Default provider to active Chapa if not provided
+        if not attrs.get("provider"):
+            try:
+                attrs["provider"] = PaymentProvider.objects.get(
+                    provider_type=PaymentProvider.ProviderType.CHAPA,
+                    is_active=True,
+                )
+            except PaymentProvider.DoesNotExist:
+                raise serializers.ValidationError("Active Chapa provider not configured.")
+
+        if attrs["amount"] <= Decimal("0.00"):
+            raise serializers.ValidationError("Amount must be greater than zero.")
+
+        return attrs
+
+
+class PaymentVerificationRequestSerializer(serializers.Serializer):
+    """Serializer for verifying a payment by transaction id (tx_ref)."""
+
+    tx_ref = serializers.UUIDField(help_text="Transaction ID (UUID)")
+
+
+class PaymentInitiationResponseSerializer(serializers.Serializer):
+    """Serializer for payment initiation response payload."""
+
+    transaction_id = serializers.UUIDField()
+    status = serializers.CharField()
+    checkout_url = serializers.CharField(allow_blank=True)
+    provider = serializers.CharField()
+    message = serializers.CharField()
 
 
 class CartItemSerializer(serializers.ModelSerializer):

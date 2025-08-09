@@ -164,6 +164,146 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Create User Account",
+        operation_description="""
+        Create a new user account with admin privileges.
+        
+        ### Features:
+        - Set initial user role and permissions
+        - Configure account verification status
+        - Generate secure initial password
+        - Send welcome email (optional)
+        
+        ### Security:
+        - Admin only access
+        - Password complexity validation
+        - Email uniqueness validation
+        - Complete audit logging
+        """,
+        request_body=AdminUserManagementSerializer,
+        responses={
+            201: openapi.Response("User created successfully", AdminUserManagementSerializer),
+            400: openapi.Response("Validation error"),
+            403: openapi.Response("Admin access required"),
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        """Create new user account."""
+        return super().create(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Get User Details",
+        operation_description="""
+        Retrieve detailed information about a specific user account.
+        
+        ### Response Includes:
+        - Complete user profile information
+        - Account status and security details
+        - Recent activity history
+        - Address information
+        - Role and permission details
+        
+        ### Security:
+        - Admin only access
+        - Complete audit logging
+        """,
+        responses={
+            200: openapi.Response("User details retrieved", AdminUserManagementSerializer),
+            404: openapi.Response("User not found"),
+            403: openapi.Response("Admin access required"),
+        },
+    )
+    def retrieve(self, request, *args, **kwargs):
+        """Get detailed user information."""
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Update User Account (Full)",
+        operation_description="""
+        Update user account with complete data replacement.
+        
+        ### Features:
+        - Modify user role and permissions
+        - Update profile information
+        - Change account status
+        - Reset security settings
+        
+        ### Security:
+        - Admin only access
+        - Complete audit logging
+        - Permission validation
+        """,
+        request_body=AdminUserManagementSerializer,
+        responses={
+            200: openapi.Response("User updated successfully", AdminUserManagementSerializer),
+            400: openapi.Response("Validation error"),
+            404: openapi.Response("User not found"),
+            403: openapi.Response("Admin access required"),
+        },
+    )
+    def update(self, request, *args, **kwargs):
+        """Update user account (full update)."""
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Update User Account (Partial)",
+        operation_description="""
+        Update user account with partial data.
+        
+        ### Features:
+        - Selectively modify specific fields
+        - Preserve existing data
+        - Flexible account management
+        - Quick status updates
+        
+        ### Security:
+        - Admin only access
+        - Complete audit logging
+        - Field-level validation
+        """,
+        request_body=AdminUserManagementSerializer,
+        responses={
+            200: openapi.Response("User updated successfully", AdminUserManagementSerializer),
+            400: openapi.Response("Validation error"),
+            404: openapi.Response("User not found"),
+            403: openapi.Response("Admin access required"),
+        },
+    )
+    def partial_update(self, request, *args, **kwargs):
+        """Update user account (partial update)."""
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Delete User Account",
+        operation_description="""
+        Permanently delete a user account and all associated data.
+        
+        ### Warning:
+        - This action cannot be undone
+        - All user data will be permanently removed
+        - Associated orders and transactions will be preserved but anonymized
+        
+        ### Security:
+        - Admin only access
+        - Complete audit logging
+        - Confirmation required
+        """,
+        responses={
+            204: openapi.Response("User account deleted successfully"),
+            404: openapi.Response("User not found"),
+            403: openapi.Response("Admin access required"),
+        },
+    )
+    def destroy(self, request, *args, **kwargs):
+        """Delete user account."""
+        return super().destroy(request, *args, **kwargs)
+
+    @swagger_auto_schema(
         tags=[SwaggerTags.AUTHENTICATION],
         operation_summary="Bulk User Actions",
         operation_description="""

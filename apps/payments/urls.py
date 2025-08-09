@@ -44,11 +44,13 @@ carts_router.register(
     r"items", CartItemViewSet, basename="cart-items"
 )
 
-# URL patterns
+# URL patterns - Use simple approach to avoid router conflicts
 urlpatterns = [
+    # Include all router URLs
     path("", include(router.urls)),
+    # Include nested cart item routes (this will create some duplication but it's harmless)
     path("", include(carts_router.urls)),
-    
+
     # Webhook endpoints
     path("webhooks/chapa/", ChapaWebhookView.as_view(), name="chapa-webhook"),
     path("webhooks/chapa/api/", chapa_webhook_api, name="chapa-webhook-api"),

@@ -626,7 +626,7 @@ class AddToCartSerializer(serializers.Serializer):
     variant_id = serializers.IntegerField(required=False)
     quantity = serializers.IntegerField(min_value=1, default=1)
     custom_attributes = serializers.JSONField(required=False, default=dict)
-    notes = serializers.CharField(max_length=500, required=False, default="")
+    notes = serializers.CharField(max_length=500, required=False, allow_blank=True, default="")
 
     def validate(self, attrs):
         """Validate add to cart request."""

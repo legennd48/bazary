@@ -71,6 +71,13 @@
         </p>
         
         <div class="warning">
+            <strong>🔑 Manual Verification:</strong> Alternatively, you can verify your email by sending a POST request to 
+            <code>http://localhost:8001/api/v1/auth/verify-email/</code> with this token:
+            <br><br>
+            <strong>Token:</strong> <code style="background-color: #f8f9fa; padding: 5px; border-radius: 3px;">{{ token }}</code>
+        </div>
+        
+        <div class="warning">
             <strong>⚠️ Important:</strong> This verification link will expire in {{ token_expires_hours }} hours. If you don't verify your email within this time, you'll need to request a new verification email.
         </div>
         

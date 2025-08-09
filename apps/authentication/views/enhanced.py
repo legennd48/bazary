@@ -58,21 +58,62 @@ class EmailVerificationView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.AUTHENTICATION],
-        operation_summary="Verify Email Address",
+        tags=[SwaggerTags.EMAIL_VERIFICATION],
+        operation_summary="📧 Verify Email Address",
         operation_description="""
-        Verify user email address using verification token.
+        ## 📧 Complete Email Verification Process
         
-        ### Process:
-        1. User receives verification email after registration
-        2. Token extracted from verification link or entered manually
-        3. Submit token to this endpoint
-        4. Email verified and account activated
+        Verify user email address using secure verification tokens.
         
-        ### Token Security:
-        - Tokens expire in 24 hours
-        - Single-use tokens (become invalid after verification)
-        - Cryptographically secure generation
+        ### 📋 Verification Process:
+        1. **Token Reception**: User receives token via registration or resend email
+        2. **Token Submission**: Submit token via POST request or GET link click
+        3. **Validation**: System validates token authenticity and expiration
+        4. **Account Activation**: Email marked as verified, account fully activated
+        
+        ### 🔗 Verification Methods:
+        
+        #### Method 1: API Submission (POST)
+        ```bash
+        curl -X POST /api/v1/auth/verify-email/ \\
+          -H "Content-Type: application/json" \\
+          -d '{"token": "YOUR_64_CHAR_TOKEN"}'
+        ```
+        
+        #### Method 2: Email Link Click (GET)
+        ```
+        Click the verification link in your email, or visit:
+        http://localhost:8001/api/v1/auth/verify-email/?token=YOUR_TOKEN
+        ```
+        
+        ### 🔐 Token Security Features:
+        - **64-Character Length**: Cryptographically secure random generation
+        - **24-Hour Expiration**: Tokens automatically expire for security
+        - **Single-Use Only**: Tokens become invalid after successful verification
+        - **User-Specific**: Each token is tied to a specific user account
+        
+        ### ✅ Success Outcomes:
+        - Email address marked as verified in user profile
+        - Account gains full access to authenticated features
+        - User can login without additional verification steps
+        - Verification token marked as used (prevents reuse)
+        
+        ### 🔄 If Token Issues:
+        - **Expired**: Request new token via `/resend-verification/` endpoint
+        - **Invalid**: Check token copied correctly from email
+        - **Already Used**: Account may already be verified
+        - **Not Found**: Token may be from different environment
+        
+        ### 🧪 Testing the Endpoint:
+        ```bash
+        # Test with POST request
+        curl -X POST "http://localhost:8001/api/v1/auth/verify-email/" \\
+          -H "Content-Type: application/json" \\
+          -d '{"token": "abcd1234efgh5678ijkl9012mnop3456qrst7890uvwx1234yz5678ab9012cd3456"}'
+        
+        # Test with GET request (email link simulation)
+        curl "http://localhost:8001/api/v1/auth/verify-email/?token=YOUR_TOKEN"
+        ```
         """,
         request_body=EmailVerificationSerializer,
         responses={
@@ -105,7 +146,7 @@ class EmailVerificationView(APIView):
 
             if success:
                 # Get user from token for response
-                from ..models.verification import EmailVerificationToken
+                from ..models import EmailVerificationToken
 
                 token_obj = EmailVerificationToken.objects.get(token=token)
                 user = token_obj.user
@@ -125,6 +166,122 @@ class EmailVerificationView(APIView):
                 return Response({"error": message}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.EMAIL_VERIFICATION],
+        operation_summary="🔗 Verify Email via URL",
+        operation_description="""
+        Verify email address via GET request (for email links).
+        
+        ### 📧 Email Link Verification:
+        This endpoint is designed to be called directly from email verification links.
+        Users click the link in their email and are automatically verified.
+        
+        ### 🔗 URL Format:
+        ```
+        GET /api/v1/auth/verify-email/?token=YOUR_64_CHAR_TOKEN
+        ```
+        
+        ### 🔄 Process Flow:
+        1. User receives verification email with link
+        2. User clicks link in email client
+        3. Browser opens this endpoint with token parameter
+        4. Server verifies token and updates account
+        5. User redirected to success page
+        
+        ### ✅ Success Response:
+        - HTTP 200 with verification confirmation
+        - Account automatically verified
+        - User can proceed to login
+        """,
+        manual_parameters=[
+            openapi.Parameter(
+                "token",
+                openapi.IN_QUERY,
+                description="64-character email verification token from email",
+                type=openapi.TYPE_STRING,
+                required=True,
+            ),
+        ],
+        responses={
+            200: openapi.Response(
+                "Email verified successfully",
+                examples={
+                    "application/json": {
+                        "message": "Email verified successfully",
+                        "user": {
+                            "id": "user-uuid",
+                            "email": "user@example.com",
+                            "is_email_verified": True,
+                        },
+                    }
+                },
+            ),
+            400: openapi.Response(
+                "Invalid or expired token",
+                examples={"application/json": {"error": "Invalid or expired token"}},
+            ),
+        },
+    )
+    def get(self, request):
+        """Verify email address via GET request (for email links)."""
+        token = request.GET.get('token')
+        if not token:
+            return Response(
+                {"error": "Token parameter is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        success, message = verify_email_with_token(token)
+
+        if success:
+            # Return a simple HTML response for email link clicks
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Email Verified - Bazary</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                    .success {{ color: #28a745; }}
+                    .container {{ max-width: 500px; margin: 0 auto; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1 class="success">✓ Email Verified Successfully!</h1>
+                    <p>{message}</p>
+                    <p>Your account is now active. You can close this window.</p>
+                </div>
+            </body>
+            </html>
+            """
+            from django.http import HttpResponse
+            return HttpResponse(html_content, content_type='text/html')
+        else:
+            # Return error HTML
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Verification Failed - Bazary</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                    .error {{ color: #dc3545; }}
+                    .container {{ max-width: 500px; margin: 0 auto; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1 class="error">✗ Verification Failed</h1>
+                    <p>{message}</p>
+                    <p>Please request a new verification email if needed.</p>
+                </div>
+            </body>
+            </html>
+            """
+            from django.http import HttpResponse
+            return HttpResponse(html_content, content_type='text/html', status=400)
 
 
 class ResendVerificationView(APIView):
@@ -148,22 +305,74 @@ class ResendVerificationView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.AUTHENTICATION],
-        operation_summary="Resend Email Verification",
+        tags=[SwaggerTags.EMAIL_VERIFICATION],
+        operation_summary="🔄 Resend Email Verification",
         operation_description="""
-        Resend email verification link for unverified user accounts.
+        ## 📧 Resend Email Verification Token
         
-        ### Requirements:
-        - Email must be registered but not verified
-        - Must wait 5 minutes between resend requests
-        - User account must be active
+        Request a new email verification token for unverified accounts.
         
-        ### Process:
-        1. Validate email exists and is unverified
-        2. Check rate limiting (5 minute cooldown)
-        3. Generate new verification token
-        4. Send verification email
-        5. Log activity for security
+        ### 📋 Resend Process:
+        1. **Account Validation**: Confirms email exists and is unverified
+        2. **Rate Limit Check**: Ensures 5-minute cooldown between requests
+        3. **Token Generation**: Creates new secure 64-character token
+        4. **Email Delivery**: Sends fresh verification email
+        5. **Token Invalidation**: Previous tokens become invalid
+        
+        ### ⏰ Rate Limiting:
+        - **Cooldown Period**: 5 minutes between resend requests
+        - **Security Measure**: Prevents email spam and abuse
+        - **User-Friendly**: Clear messaging about wait time
+        - **Automatic Reset**: Cooldown resets after successful verification
+        
+        ### 🎯 Use Cases:
+        - **Email Not Received**: Original verification email missing/delayed
+        - **Token Expired**: Previous token exceeded 24-hour limit
+        - **Email Issues**: Problems with email delivery or formatting
+        - **User Request**: User specifically requests new verification email
+        
+        ### 📧 Email Content:
+        New verification emails include:
+        - **Clickable Link**: Direct verification via email click
+        - **Manual Token**: 64-character token for API submission
+        - **Clear Instructions**: Step-by-step verification guide
+        - **Security Notice**: Information about token expiration
+        
+        ### 🔐 Security Features:
+        - **Email Validation**: Must be registered but unverified
+        - **Account Status**: Only active accounts can request resend
+        - **Token Uniqueness**: Each resend generates unique token
+        - **Audit Logging**: Resend requests logged for security
+        
+        ### 🧪 Testing Examples:
+        ```bash
+        # Request resend for unverified email
+        curl -X POST "http://localhost:8001/api/v1/auth/resend-verification/" \\
+          -H "Content-Type: application/json" \\
+          -d '{"email": "user@example.com"}'
+        
+        # Expected success response
+        {
+          "message": "Verification email sent successfully",
+          "email": "user@example.com"
+        }
+        
+        # Test rate limiting (send again within 5 minutes)
+        curl -X POST "http://localhost:8001/api/v1/auth/resend-verification/" \\
+          -H "Content-Type: application/json" \\
+          -d '{"email": "user@example.com"}'
+        
+        # Expected rate limit response (429)
+        {
+          "error": "Please wait 4 minutes before requesting again"
+        }
+        ```
+        
+        ### ⚠️ Error Scenarios:
+        - **Already Verified**: Email address already confirmed
+        - **Rate Limited**: Too many requests within 5-minute window
+        - **Account Not Found**: Email not registered in system
+        - **Inactive Account**: Account deactivated or suspended
         """,
         request_body=ResendVerificationSerializer,
         responses={
@@ -256,27 +465,89 @@ class PasswordResetRequestView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.AUTHENTICATION],
-        operation_summary="Request Password Reset",
+        tags=[SwaggerTags.PASSWORD_MANAGEMENT],
+        operation_summary="🔑 Request Password Reset",
         operation_description="""
-        Request password reset link to be sent via email.
+        ## 🔐 Request Password Reset Token
         
-        ### Security Design:
-        - No indication whether email exists (prevents email enumeration)
-        - Same response for valid and invalid emails
-        - Rate limited to prevent abuse
+        Initiate password reset process by requesting a secure reset token via email.
         
-        ### Process:
-        1. User submits email address
-        2. If email exists, generate secure reset token
-        3. Send password reset email with token
-        4. Log security activity with IP address
-        5. Return success response (regardless of email validity)
+        ### 🎯 Reset Request Process:
+        1. **Email Validation**: Confirms account exists and is active
+        2. **Token Generation**: Creates secure 64-character reset token
+        3. **Security Check**: Rate limiting prevents abuse
+        4. **Email Dispatch**: Sends password reset instructions
+        5. **Token Activation**: Reset token becomes valid for 1 hour
         
-        ### Token Security:
-        - Tokens expire in 1 hour
-        - Single-use tokens
-        - IP address and user agent logged
+        ### 📧 Reset Email Content:
+        Password reset emails include:
+        - **Secure Reset Link**: Direct password reset via email click
+        - **Manual Token**: 64-character token for API-based reset
+        - **Step-by-Step Guide**: Clear instructions for password change
+        - **Security Warning**: Information about token expiration and security
+        - **Contact Support**: Assistance information if needed
+        
+        ### ⏰ Security & Rate Limiting:
+        - **Token Expiration**: 1-hour validity period
+        - **Rate Limiting**: 3 requests per hour per IP
+        - **Single Use**: Each token can only be used once
+        - **No Email Enumeration**: Same response for existing/non-existing emails
+        - **Audit Logging**: All reset requests logged with IP and user agent
+        
+        ### 🔒 Security Features:
+        - **Email Ownership**: Must have access to registered email
+        - **Token Uniqueness**: Each request generates unique token
+        - **Secure Generation**: Cryptographically secure random tokens
+        - **No Password Exposure**: Current password never transmitted
+        - **Privacy Protection**: No indication if email exists in system
+        
+        ### 🧪 Testing Examples:
+        ```bash
+        # Request password reset
+        curl -X POST "http://localhost:8001/api/v1/auth/password-reset-request/" \\
+          -H "Content-Type: application/json" \\
+          -d '{"email": "user@example.com"}'
+        
+        # Expected success response (always same)
+        {
+          "message": "If an account with this email exists, a password reset link has been sent.",
+          "email": "user@example.com"
+        }
+        
+        # Test with non-existent email (security response - identical)
+        curl -X POST "http://localhost:8001/api/v1/auth/password-reset-request/" \\
+          -H "Content-Type: application/json" \\
+          -d '{"email": "nonexistent@example.com"}'
+        
+        # Expected response (same for security)
+        {
+          "message": "If an account with this email exists, a password reset link has been sent.",
+          "email": "nonexistent@example.com"
+        }
+        
+        # Test rate limiting (4th request in same hour)
+        curl -X POST "http://localhost:8001/api/v1/auth/password-reset-request/" \\
+          -H "Content-Type: application/json" \\
+          -d '{"email": "user@example.com"}'
+        
+        # Expected rate limit response (429)
+        {
+          "error": "Rate limit exceeded. Try again later."
+        }
+        ```
+        
+        ### 🎯 Use Cases:
+        - **Forgotten Password**: User cannot remember current password
+        - **Account Recovery**: Regaining access to locked account
+        - **Security Precaution**: Changing password after potential compromise
+        - **Mobile Reset**: Easy password change from mobile devices
+        
+        ### ⚠️ Important Security Notes:
+        - **Consistent Response**: Identical response for existing/non-existing emails
+        - **Email Required**: Must have access to registered email address
+        - **One Token**: Previous reset tokens invalidated upon new request
+        - **Time Sensitive**: Complete reset within 1-hour window
+        - **IP Tracking**: All requests logged with IP address for security
         """,
         request_body=PasswordResetRequestSerializer,
         responses={
@@ -351,25 +622,113 @@ class PasswordResetConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.AUTHENTICATION],
-        operation_summary="Confirm Password Reset",
+        tags=[SwaggerTags.PASSWORD_MANAGEMENT],
+        operation_summary="✅ Confirm Password Reset",
         operation_description="""
-        Complete password reset process using token and new password.
+        ## 🔐 Complete Password Reset Process
         
-        ### Process:
-        1. Validate reset token (must be valid and not expired)
-        2. Validate new password meets strength requirements
-        3. Update user password with secure hashing
-        4. Clear any failed login attempts
-        5. Mark token as used (prevents reuse)
-        6. Log security activity
+        Finalize password reset using the token from email and set a new secure password.
         
-        ### Security Benefits:
-        - Token becomes invalid after use
-        - Password strength validation enforced
-        - Failed login attempts cleared
-        - Last password change timestamp updated
-        - Complete audit trail logged
+        ### 🎯 Confirmation Process:
+        1. **Token Validation**: Verifies token is valid and not expired
+        2. **Password Strength**: Validates new password meets security requirements
+        3. **Account Update**: Securely updates password with proper hashing
+        4. **Security Reset**: Clears failed login attempts and updates timestamps
+        5. **Token Invalidation**: Marks token as used to prevent reuse
+        6. **Activity Logging**: Records password change for security audit
+        
+        ### 🔒 Password Requirements:
+        Password must meet these criteria:
+        - **Length**: Minimum 8 characters, recommended 12+
+        - **Complexity**: Mix of uppercase, lowercase, numbers, and symbols
+        - **Uniqueness**: Cannot be the same as previous password
+        - **Common Words**: Avoid dictionary words and common patterns
+        - **Personal Info**: Should not contain email, name, or personal details
+        
+        ### 🛡️ Security Features:
+        - **One-Time Use**: Token becomes invalid after successful use
+        - **Time Expiration**: Tokens expire after 1 hour for security
+        - **Secure Hashing**: Password stored with bcrypt/PBKDF2 hashing
+        - **Session Management**: All existing sessions invalidated after reset
+        - **Failed Attempts**: Login failure counters reset upon successful reset
+        
+        ### 📊 Response Information:
+        Successful reset provides:
+        - **Confirmation Message**: Clear success notification
+        - **User Details**: Updated account information
+        - **Last Change**: Timestamp of password update
+        - **Account Status**: Verification of account state
+        
+        ### 🧪 Testing Examples:
+        ```bash
+        # Confirm password reset with valid token
+        curl -X POST "http://localhost:8001/api/v1/auth/password-reset-confirm/" \\
+          -H "Content-Type: application/json" \\
+          -d '{
+            "token": "abc123def456ghi789jkl012mno345pqr678stu901vwx234yzabc567def890gh",
+            "new_password": "NewSecure123!"
+          }'
+        
+        # Expected success response
+        {
+          "message": "Password reset successfully",
+          "user": {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "email": "user@example.com",
+            "last_password_change": "2025-01-01T12:00:00Z"
+          }
+        }
+        
+        # Test with expired token
+        curl -X POST "http://localhost:8001/api/v1/auth/password-reset-confirm/" \\
+          -H "Content-Type: application/json" \\
+          -d '{
+            "token": "expired_token_here",
+            "new_password": "NewSecure123!"
+          }'
+        
+        # Expected error response (400)
+        {
+          "token": ["Invalid or expired token."]
+        }
+        
+        # Test with weak password
+        curl -X POST "http://localhost:8001/api/v1/auth/password-reset-confirm/" \\
+          -H "Content-Type: application/json" \\
+          -d '{
+            "token": "valid_token_here",
+            "new_password": "123"
+          }'
+        
+        # Expected validation error (400)
+        {
+          "new_password": [
+            "This password is too short. It must contain at least 8 characters.",
+            "This password is too common."
+          ]
+        }
+        ```
+        
+        ### 🎯 Use Cases:
+        - **Password Recovery**: Complete forgotten password reset process
+        - **Security Response**: Change password after security incident
+        - **Account Takeover**: Regain control of compromised account
+        - **Proactive Security**: Regular password updates for better security
+        
+        ### ⚠️ Important Notes:
+        - **Token Lifespan**: Must complete reset within 1 hour of request
+        - **Single Use**: Each token can only be used once
+        - **Session Impact**: All existing login sessions will be invalidated
+        - **Security Audit**: Password change events are logged for security
+        - **Account Access**: Use new password for all future logins
+        
+        ### 🔄 Post-Reset Actions:
+        After successful password reset:
+        1. **Immediate Login**: Use new password to access account
+        2. **Session Review**: Check active sessions and revoke if needed
+        3. **Security Check**: Review account activity for unauthorized access
+        4. **Device Update**: Update password on all saved devices
+        5. **Backup Codes**: Generate new backup codes if using 2FA
         """,
         request_body=PasswordResetConfirmSerializer,
         responses={
@@ -409,7 +768,7 @@ class PasswordResetConfirmView(APIView):
 
             if success:
                 # Get user from token for response
-                from ..models.verification import PasswordResetToken
+                from ..models import PasswordResetToken
 
                 token_obj = PasswordResetToken.objects.get(token=token)
                 user = token_obj.user

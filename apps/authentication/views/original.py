@@ -11,6 +11,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers as drf_serializers
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -58,25 +60,46 @@ class RegisterView(APIView):
 
     @swagger_auto_schema(
         tags=[SwaggerTags.AUTHENTICATION],
-        operation_summary="Register New User",
+        operation_summary="Register New User Account",
         operation_description="""
-        Create a new user account with email verification.
+        ## 🔐 User Registration Endpoint
         
-        ### Required Fields:
-        - **username**: Unique username (3-150 characters)
-        - **email**: Valid email address (will receive verification email)
-        - **password**: Secure password (min 8 characters)
-        - **password_confirm**: Must match password field
-        - **first_name**: User's first name
-        - **last_name**: User's last name
+        Create a new user account with comprehensive validation and email verification.
         
-        ### Optional Fields:
-        - **phone_number**: Contact phone number
+        ### 📋 Process Flow:
+        1. **Account Creation**: Validates and creates new user account
+        2. **Email Verification**: Automatically sends verification email
+        3. **Security Validation**: Ensures password strength and uniqueness
+        4. **Response**: Returns user data and success confirmation
         
-        ### Response:
-        - Returns user data and success message
-        - Sends email verification to provided email address
-        - User account will be created but requires email verification
+        ### 🔑 Required Fields:
+        - **username**: Unique identifier (3-150 characters, alphanumeric + underscore)
+        - **email**: Valid email address (receives verification email)
+        - **password**: Secure password (minimum 8 characters with complexity rules)
+        - **password_confirm**: Must exactly match password field
+        - **first_name**: User's first name (required for personalization)
+        - **last_name**: User's last name (required for personalization)
+        
+        ### 📱 Optional Fields:
+        - **phone_number**: Contact phone number (international format recommended)
+        
+        ### ✅ Success Response:
+        - User account created successfully
+        - Email verification sent to provided address
+        - Account requires email verification before full activation
+        - Returns user data with verification status
+        
+        ### ⚠️ Validation Rules:
+        - Username must be unique across all users
+        - Email must be valid and unique
+        - Password must meet security requirements
+        - All required fields must be provided
+        
+        ### 🔄 Next Steps:
+        After registration, users should:
+        1. Check email for verification link
+        2. Click verification link or use `/verify-email/` endpoint
+        3. Use `/token/` endpoint to login after verification
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -294,20 +317,128 @@ class ProfileView(APIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """ViewSet for user management (admin only)."""
+    """
+    ## User Management API
+
+    Basic user management for administrative operations.
+
+    ### 👥 Features
+    - **User List**: Get all users (admin only)
+    - **User Details**: View specific user information
+    - **User Updates**: Modify user accounts
+    - **User Creation**: Create new user accounts
+
+    ### 🔐 Permissions
+    - **Admin Access**: Full CRUD operations for all users
+    - **Self Access**: Users can view/update their own profile only
+    """
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [UserManagementPermission]
 
     def get_queryset(self):
-        """Filter queryset based on user permissions."""
+        """Filter queryset based to user permissions."""
         # Handle Swagger schema generation
         if getattr(self, "swagger_fake_view", False):
             return User.objects.none()
         if self.request.user.is_staff:
             return User.objects.all()
         return User.objects.filter(id=self.request.user.id)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="List Users",
+        operation_description="Get a list of all users (Admin only)",
+        responses={
+            200: openapi.Response("Users retrieved successfully", UserSerializer(many=True)),
+            401: openapi.Response("Unauthorized - Admin access required"),
+            403: openapi.Response("Forbidden - Staff privileges required"),
+        },
+    )
+    def list(self, request, *args, **kwargs):
+        """List all users."""
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Get User Details",
+        operation_description="Retrieve detailed information about a specific user (Admin only)",
+        responses={
+            200: openapi.Response("User details retrieved successfully", UserSerializer),
+            401: openapi.Response("Unauthorized - Admin access required"),
+            403: openapi.Response("Forbidden - Staff privileges required"),
+            404: openapi.Response("User not found"),
+        },
+    )
+    def retrieve(self, request, *args, **kwargs):
+        """Get detailed user information."""
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Create User",
+        operation_description="Create a new user account (Admin only)",
+        request_body=UserSerializer,
+        responses={
+            201: openapi.Response("User created successfully", UserSerializer),
+            400: openapi.Response("Validation error"),
+            401: openapi.Response("Unauthorized - Admin access required"),
+            403: openapi.Response("Forbidden - Staff privileges required"),
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        """Create a new user."""
+        return super().create(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Update User",
+        operation_description="Update an existing user account (Admin only)",
+        request_body=UserSerializer,
+        responses={
+            200: openapi.Response("User updated successfully", UserSerializer),
+            400: openapi.Response("Validation error"),
+            401: openapi.Response("Unauthorized - Admin access required"),
+            403: openapi.Response("Forbidden - Staff privileges required"),
+            404: openapi.Response("User not found"),
+        },
+    )
+    def update(self, request, *args, **kwargs):
+        """Update a user."""
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Partial Update User",
+        operation_description="Partially update an existing user account (Admin only)",
+        request_body=UserSerializer,
+        responses={
+            200: openapi.Response("User updated successfully", UserSerializer),
+            400: openapi.Response("Validation error"),
+            401: openapi.Response("Unauthorized - Admin access required"),
+            403: openapi.Response("Forbidden - Staff privileges required"),
+            404: openapi.Response("User not found"),
+        },
+    )
+    def partial_update(self, request, *args, **kwargs):
+        """Partially update a user."""
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.ADMIN_USER_MANAGEMENT],
+        operation_summary="Delete User",
+        operation_description="Delete an existing user account (Admin only)",
+        responses={
+            204: openapi.Response("User deleted successfully"),
+            401: openapi.Response("Unauthorized - Admin access required"),
+            403: openapi.Response("Forbidden - Staff privileges required"),
+            404: openapi.Response("User not found"),
+        },
+    )
+    def destroy(self, request, *args, **kwargs):
+        """Delete a user."""
+        return super().destroy(request, *args, **kwargs)
 
     @swagger_auto_schema(
         tags=[SwaggerTags.AUTHENTICATION],
@@ -353,31 +484,93 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    """Custom JWT token obtain view."""
+    """
+    ## JWT Token Authentication
+    
+    Secure user authentication with JWT token generation.
+    
+    ### 🔐 Authentication Process
+    - **Credential Validation**: Verifies username/email and password
+    - **Token Generation**: Creates access and refresh tokens
+    - **Session Management**: Enables stateless authentication
+    - **Security**: JWT tokens with configurable expiration
+    """
 
+    @extend_schema(
+        request=inline_serializer(
+            name="TokenObtainPairRequest",
+            fields={
+                "email": drf_serializers.EmailField(),
+                "password": drf_serializers.CharField()
+            },
+        ),
+        responses={
+            200: inline_serializer(
+                name="TokenPairResponse",
+                fields={
+                    "access": drf_serializers.CharField(),
+                    "refresh": drf_serializers.CharField(),
+                },
+            )
+        },
+        tags=[SwaggerTags.AUTHENTICATION],
+        summary="🔑 User Login & Token Generation",
+        description="Authenticate with email & password to obtain JWT tokens.",
+    )
     @swagger_auto_schema(
         tags=[SwaggerTags.AUTHENTICATION],
-        operation_summary="Login User",
+        operation_summary="🔑 User Login & Token Generation",
         operation_description="""
-        Authenticate user and obtain JWT access and refresh tokens.
+        ## 🔐 Authenticate User and Obtain JWT Tokens
         
-        ### Authentication:
-        - Provide username/email and password
-        - Returns access token (expires in 15 minutes)
-        - Returns refresh token (expires in 7 days)
+        Primary authentication endpoint for user login and token generation.
         
-        ### Token Usage:
-        - Use access token in Authorization header: `Bearer <access_token>`
-        - Use refresh token to get new access tokens when expired
+        ### 📋 Process Flow:
+        1. **Credential Validation**: Verifies username/email and password
+        2. **Account Verification**: Checks if email is verified (if required)
+        3. **Token Generation**: Creates JWT access and refresh tokens
+        4. **User Data**: Returns authenticated user information
+        
+        ### 🎫 Token Information:
+        - **Access Token**: Short-lived (15 minutes) for API requests
+        - **Refresh Token**: Long-lived (7 days) for generating new access tokens
+        - **Token Type**: Bearer tokens for Authorization header
+        
+    ### 📱 Accepted Credentials:
+    - **Email**: Your registered email address (used as the username field)
+    - **Password**: Your account password
+        
+        ### 🔧 Usage Instructions:
+        ```bash
+        # Use access token in API requests:
+        curl -H "Authorization: Bearer <access_token>" /api/v1/auth/profile/
+        
+        # Refresh tokens when expired:
+        curl -X POST /api/v1/auth/token/refresh/ -d '{"refresh": "<refresh_token>"}'
+        ```
+        
+        ### ⚠️ Security Notes:
+        - Store tokens securely (not in localStorage for web apps)
+        - Use HTTPS in production
+        - Refresh tokens before access token expires
+        - Logout destroys refresh tokens server-side
+        
+        ### 🔄 Next Steps:
+        After login:
+        1. Store both tokens securely
+        2. Use access token for authenticated requests
+        3. Set up automatic token refresh
+        4. Access user profile at `/profile/` endpoint
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=["username", "password"],
+            required=["email", "password"],
             properties={
-                "username": openapi.Schema(
+                "email": openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description="Username or email address",
-                    example="john_doe",
+                    format=openapi.FORMAT_EMAIL,
+                    description="Email address used to log in",
+                    example="john.doe@example.com",
                 ),
                 "password": openapi.Schema(
                     type=openapi.TYPE_STRING,
@@ -426,23 +619,64 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 class CustomTokenRefreshView(TokenRefreshView):
-    """Custom JWT token refresh view."""
+    """
+    ## JWT Token Refresh
+    
+    Maintain authentication by refreshing expired access tokens.
+    
+    ### 🔄 Token Refresh Process
+    - **Validation**: Verifies refresh token validity
+    - **Generation**: Creates new access token
+    - **Persistence**: Keeps refresh token valid until expiry
+    - **Security**: Maintains session without re-authentication
+    """
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.AUTHENTICATION],
-        operation_summary="Refresh Access Token",
+        tags=[SwaggerTags.TOKEN_MANAGEMENT],
+        operation_summary="🔄 Refresh Access Token",
         operation_description="""
-        Refresh an expired access token using a valid refresh token.
+        ## 🎫 Generate New Access Token from Refresh Token
         
-        ### Process:
-        - Provide valid refresh token
-        - Receive new access token
-        - Refresh token remains valid until its expiry
+        Essential endpoint for maintaining long-term authentication sessions.
         
-        ### Security:
-        - Refresh tokens are long-lived (7 days)
-        - Access tokens are short-lived (15 minutes)
-        - Use this endpoint to maintain authentication
+        ### 📋 Process Flow:
+        1. **Token Validation**: Verifies refresh token is valid and not expired
+        2. **Access Generation**: Creates new access token with fresh expiration
+        3. **Session Continuity**: Maintains user session without re-login
+        4. **Security Check**: Validates token hasn't been blacklisted
+        
+        ### 🕐 Token Lifecycle:
+        - **Access Token**: Expires every 15 minutes (short-lived for security)
+        - **Refresh Token**: Expires every 7 days (long-lived for convenience)
+        - **Auto-Refresh**: Implement client-side auto-refresh before expiry
+        
+        ### 🔧 Implementation Pattern:
+        ```javascript
+        // Client-side auto-refresh example
+        const refreshToken = async () => {
+          const response = await fetch('/api/v1/auth/token/refresh/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({refresh: localStorage.getItem('refresh_token')})
+          });
+          const data = await response.json();
+          localStorage.setItem('access_token', data.access);
+        };
+        
+        // Set up auto-refresh 1 minute before expiry
+        setTimeout(refreshToken, 14 * 60 * 1000); // 14 minutes
+        ```
+        
+        ### ⚠️ Security Best Practices:
+        - Implement token refresh in background
+        - Handle refresh token expiry gracefully
+        - Clear tokens on logout
+        - Use secure storage for tokens
+        
+        ### 🚨 Error Handling:
+        - **401 Unauthorized**: Refresh token expired or invalid
+        - **400 Bad Request**: Malformed token or request
+        - **Token Blacklisted**: User logged out or security breach
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -492,18 +726,79 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 
 class CustomTokenVerifyView(TokenVerifyView):
-    """Custom JWT token verify view."""
+    """
+    ## JWT Token Verification
+    
+    Validate JWT tokens without requiring refresh.
+    
+    ### 🔍 Verification Process
+    - **Token Validation**: Checks token format and signature
+    - **Expiry Check**: Verifies token hasn't expired
+    - **Blacklist Check**: Ensures token hasn't been revoked
+    - **Performance**: Fast validation for client-side checks
+    """
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.AUTHENTICATION],
-        operation_summary="Verify Token",
+        tags=[SwaggerTags.TOKEN_MANAGEMENT],
+        operation_summary="🔍 Verify Token Validity",
         operation_description="""
-        Verify if a JWT token is valid and not expired.
+        ## 🎫 Validate JWT Token Without Refresh
         
-        ### Usage:
-        - Check token validity before making authenticated requests
-        - Useful for client-side token validation
-        - Works with both access and refresh tokens
+        Quick token validation endpoint for client-side authentication checks.
+        
+        ### 📋 Verification Process:
+        1. **Format Check**: Validates JWT structure and format
+        2. **Signature Verification**: Confirms token authenticity
+        3. **Expiry Validation**: Checks if token is still valid
+        4. **Blacklist Check**: Ensures token hasn't been revoked
+        
+        ### 🎯 Use Cases:
+        - **Client-side Validation**: Check token before API calls
+        - **Session Monitoring**: Periodic token health checks
+        - **Security Audits**: Validate token integrity
+        - **Pre-request Checks**: Avoid failed API calls
+        
+        ### 🔧 Implementation Examples:
+        ```javascript
+        // Client-side token validation
+        const isTokenValid = async (token) => {
+          try {
+            const response = await fetch('/api/v1/auth/token/verify/', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({token})
+            });
+            return response.ok; // true if valid, false if invalid
+          } catch (error) {
+            return false;
+          }
+        };
+        
+        // Check before making authenticated requests
+        if (await isTokenValid(accessToken)) {
+          // Proceed with API call
+          makeAuthenticatedRequest();
+        } else {
+          // Refresh token or redirect to login
+          refreshTokenOrLogin();
+        }
+        ```
+        
+        ### ⚡ Performance Benefits:
+        - **Fast Validation**: No database queries for basic checks
+        - **Network Efficient**: Small request/response payload
+        - **Client Optimization**: Reduce failed API calls
+        - **Security Layer**: Additional token validation
+        
+        ### 🎭 Token Types Supported:
+        - **Access Tokens**: Short-lived authentication tokens
+        - **Refresh Tokens**: Long-lived refresh tokens
+        - **Custom Tokens**: Any JWT token issued by this system
+        
+        ### 📊 Response Patterns:
+        - **200 OK**: Token is valid and active
+        - **401 Unauthorized**: Token is invalid, expired, or blacklisted
+        - **400 Bad Request**: Malformed token or request
         """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,

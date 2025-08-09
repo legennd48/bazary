@@ -93,6 +93,14 @@ class VariantOptionViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        tags=[SwaggerTags.VARIANT_OPTIONS],
+        operation_summary="Partial Update Variant Option",
+        operation_description="Partially update an existing variant option",
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
         operation_summary="Delete Variant Option",
         operation_description="Delete a variant option (will also delete all its values)",
@@ -158,6 +166,14 @@ class VariantOptionValueViewSet(viewsets.ModelViewSet):
     )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.VARIANT_OPTIONS],
+        operation_summary="Partial Update Option Value",
+        operation_description="Partially update an existing variant option value",
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],
@@ -238,6 +254,14 @@ class ProductVariantViewSet(viewsets.ModelViewSet):
     )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.PRODUCT_VARIANTS],
+        operation_summary="Partial Update Product Variant",
+        operation_description="Partially update an existing product variant",
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
     @swagger_auto_schema(
         tags=[SwaggerTags.PRODUCTS],

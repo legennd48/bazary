@@ -56,6 +56,7 @@ LOCAL_APPS = [
     "apps.authentication",
     "apps.categories",
     "apps.products",
+    "apps.payments",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -363,14 +364,154 @@ API_SECURITY_ENABLED = config("API_SECURITY_ENABLED", default=True, cast=bool)
 API_REQUEST_SANITIZATION = config("API_REQUEST_SANITIZATION", default=True, cast=bool)
 API_SECURITY_LOGGING = config("API_SECURITY_LOGGING", default=True, cast=bool)
 
-# DRF Spectacular settings
+# DRF Spectacular settings for enhanced API documentation
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Bazary API",
-    "DESCRIPTION": "A comprehensive e-commerce API built with Django REST Framework",
+    "TITLE": "🛒 Bazary E-Commerce API",
+    "DESCRIPTION": """
+# Bazary E-Commerce Backend API
+
+A comprehensive, production-ready e-commerce API built with Django REST Framework.
+
+## 🚀 Key Features
+- **Complete E-Commerce Solution**: Products, categories, shopping cart, payments
+- **Advanced Search & Filtering**: Multi-field search with faceted filters
+- **Payment Integration**: Chapa (Ethiopian) payment gateway with webhook support
+- **User Management**: JWT authentication, email verification, admin controls
+- **Product Variants**: Size, color, and custom product options
+- **Real-time Inventory**: Stock tracking and low-stock alerts
+- **Admin Dashboard**: Bulk operations and analytics
+
+## 🔐 Authentication
+Most endpoints require JWT authentication. Get your access token from `/api/v1/auth/token/`.
+
+## 📊 API Organization
+Endpoints are organized by user journey and logical grouping:
+1. **Authentication Flow** - Login, registration, verification
+2. **User Management** - Profiles, addresses, activity
+3. **Admin Operations** - User & product management
+4. **Product Catalog** - Categories, products, variants
+5. **Shopping Experience** - Discovery, search, cart
+6. **Payment Processing** - Methods, transactions, webhooks
+7. **System Utilities** - Health checks, testing guides
+
+## 🧪 Testing
+Comprehensive testing guides available for each endpoint group.
+    """,
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
+    "TAGS": [
+        {
+            "name": "01 🔐 Authentication",
+            "description": "Core authentication endpoints for user login, registration, and session management. Start here for API access.",
+        },
+        {
+            "name": "02 📧 Email Verification", 
+            "description": "Email verification and account activation endpoints. Required for new user accounts.",
+        },
+        {
+            "name": "03 🔑 Password Management",
+            "description": "Password reset and recovery endpoints for account security management.",
+        },
+        {
+            "name": "04 🎫 Token Management",
+            "description": "JWT token operations including refresh, verify, and blacklist functionality.",
+        },
+        {
+            "name": "05 👤 User Profile",
+            "description": "User profile management, settings, and personal information endpoints.",
+        },
+        {
+            "name": "06 🏠 User Addresses",
+            "description": "User shipping and billing address management for checkout and delivery.",
+        },
+        {
+            "name": "07 📊 User Activity",
+            "description": "User activity tracking, audit logs, and behavioral analytics.",
+        },
+        {
+            "name": "08 🛡️ Admin - User Management",
+            "description": "Administrative user management operations. Requires admin privileges.",
+        },
+        {
+            "name": "09 🛡️ Admin - Product Management", 
+            "description": "Administrative product management and bulk operations. Requires admin privileges.",
+        },
+        {
+            "name": "11 📂 Categories",
+            "description": "Product category management with hierarchical organization support.",
+        },
+        {
+            "name": "12 🏷️ Tags",
+            "description": "Product tagging system for flexible organization and filtering.",
+        },
+        {
+            "name": "13 📦 Products",
+            "description": "Core product management with CRUD operations, search, and filtering capabilities.",
+        },
+        {
+            "name": "14 🔄 Product Variants",
+            "description": "Product variant management for size, color, and other product options.",
+        },
+        {
+            "name": "16 ⚙️ Variant Options",
+            "description": "Variant option definitions and value management for product customization.",
+        },
+        {
+            "name": "17 🔍 Product Discovery",
+            "description": "Product browsing, featured products, and discovery endpoints for customers.",
+        },
+        {
+            "name": "18 🔎 Search & Filters",
+            "description": "Advanced product search with filters, sorting, and faceted search capabilities.",
+        },
+        {
+            "name": "19 🛒 Shopping Cart",
+            "description": "Shopping cart operations for managing customer product selections.",
+        },
+        {
+            "name": "21 🏦 Payment Providers",
+            "description": "Payment provider configuration and management (Chapa, Stripe, etc.).",
+        },
+        {
+            "name": "22 💳 Payment Methods",
+            "description": "Payment method management for customers and transaction processing.",
+        },
+        {
+            "name": "23 💰 Transactions",
+            "description": "Transaction processing, tracking, and payment flow management.",
+        },
+        {
+            "name": "24 🔔 Payment Webhooks",
+            "description": "Webhook endpoints for payment provider notifications and status updates.",
+        },
+        {
+            "name": "26 🏥 System Health",
+            "description": "System health checks, monitoring, and status endpoints.",
+        },
+        {
+            "name": "29 📚 Testing Guides",
+            "description": "Comprehensive testing instructions and examples for each API module.",
+        },
+    ],
+    "EXTERNAL_DOCS": {
+        "description": "Complete API Documentation & Guides",
+        "url": "https://github.com/legennd48/bazary/blob/main/README.md"
+    },
+    "CONTACT": {
+        "name": "Bazary API Support",
+        "email": "api-support@bazary.com",
+        "url": "https://github.com/legennd48/bazary/issues"
+    },
+    "LICENSE": {
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+    },
+    # Postprocessing hooks to tweak schema after generation
+    "POSTPROCESSING_HOOKS": [
+        "apps.core.schema_hooks.rename_api_tag_to_z_advanced",
+    ],
 }
 
 # Email Configuration

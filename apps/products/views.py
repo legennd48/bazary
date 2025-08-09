@@ -93,7 +93,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
     ordering = ["-created_at"]
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.PRODUCT_DISCOVERY],
         operation_summary="List Products",
         operation_description="Get a paginated list of products with optional filtering and search",
         manual_parameters=[
@@ -128,7 +128,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.PRODUCT_DISCOVERY],
         operation_summary="Get Product Details",
         operation_description="Retrieve detailed information about a specific product",
         responses={
@@ -145,7 +145,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return super().retrieve(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Create Product",
         operation_description="Create a new product (Admin only)",
         request_body=openapi.Schema(
@@ -204,7 +204,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Update Product",
         operation_description="Update an existing product (Admin only)",
         request_body=ProductCreateUpdateSerializer,
@@ -220,7 +220,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Partial Update Product",
         operation_description="Partially update an existing product (Admin only)",
         request_body=ProductCreateUpdateSerializer,
@@ -236,7 +236,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return super().partial_update(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Delete Product",
         operation_description="Delete an existing product (Admin only)",
         responses={
@@ -279,7 +279,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return queryset
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.PRODUCT_SEARCH],
         operation_summary="Search Products",
         operation_description="""
         Advanced product search with multiple filters and text search.
@@ -359,7 +359,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.PRODUCT_DISCOVERY],
         operation_summary="Get Featured Products",
         operation_description="""
         Retrieve products that are marked as featured.
@@ -413,7 +413,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.PRODUCT_DISCOVERY],
         operation_summary="Get In-Stock Products",
         operation_description="""
         Retrieve products that are currently available in stock.
@@ -469,7 +469,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        tags=[SwaggerTags.PRODUCTS],
+        tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Update Product Stock",
         operation_description="""
         Update the stock quantity for a specific product (Admin only).
@@ -749,6 +749,22 @@ class TagViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         """Update a tag."""
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=[SwaggerTags.TAGS],
+        operation_summary="Partial Update Tag",
+        operation_description="Partially update an existing tag (Admin only)",
+        request_body=TagSerializer,
+        responses={
+            200: openapi.Response("Tag updated successfully", TagSerializer),
+            400: openapi.Response("Validation error"),
+            401: openapi.Response("Unauthorized - Admin access required"),
+            404: openapi.Response("Tag not found"),
+        },
+    )
+    def partial_update(self, request, *args, **kwargs):
+        """Partially update a tag."""
+        return super().partial_update(request, *args, **kwargs)
 
     @swagger_auto_schema(
         tags=[SwaggerTags.TAGS],

@@ -7,7 +7,7 @@ from environment variables.
 
 import logging
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction

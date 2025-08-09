@@ -92,9 +92,7 @@ class Command(BaseCommand):
                 self.display_summary()
 
         except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(f"❌ Provider setup failed: {str(e)}")
-            )
+            self.stdout.write(self.style.ERROR(f"❌ Provider setup failed: {str(e)}"))
             raise CommandError(f"Failed to set up payment providers: {str(e)}")
 
         duration = timezone.now() - start_time
@@ -107,7 +105,7 @@ class Command(BaseCommand):
     def setup_chapa_provider(self, options: Dict[str, Any]) -> bool:
         """
         Set up Chapa payment provider.
-        
+
         Returns:
             bool: True if provider was configured, False otherwise
         """
@@ -200,15 +198,13 @@ class Command(BaseCommand):
             self.stdout.write(f"    - API Key: {provider.api_key[:8]}...")
             self.stdout.write(f"    - Webhook Secret: {provider.webhook_secret[:8]}...")
 
-        self.stdout.write(
-            self.style.SUCCESS(f"✅ {action} Chapa payment provider")
-        )
+        self.stdout.write(self.style.SUCCESS(f"✅ {action} Chapa payment provider"))
         return True
 
     def display_summary(self):
         """Display current payment provider status."""
         self.stdout.write("\n📊 Payment Providers Summary:")
-        
+
         providers = PaymentProvider.objects.all()
         if not providers.exists():
             self.stdout.write("  No payment providers configured")
@@ -217,15 +213,17 @@ class Command(BaseCommand):
         for provider in providers:
             status_icon = "✅" if provider.is_active else "❌"
             mode_text = "TEST" if provider.test_mode else "LIVE"
-            
+
             self.stdout.write(
                 f"  {status_icon} {provider.get_provider_type_display()} "
                 f"({mode_text}) - {provider.name}"
             )
-            
+
             if provider.provider_type == PaymentProvider.ProviderType.CHAPA:
                 self.stdout.write(f"    - Currency: ETB (Ethiopian Birr)")
-                self.stdout.write(f"    - Webhook: {provider.configuration.get('webhook_url', 'Not set')}")
+                self.stdout.write(
+                    f"    - Webhook: {provider.configuration.get('webhook_url', 'Not set')}"
+                )
 
         # Show configuration tips
         self.stdout.write("\n💡 Next Steps:")

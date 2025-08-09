@@ -105,7 +105,7 @@ class EmailVerificationView(APIView):
 
             if success:
                 # Get user from token for response
-                from ..models.verification import EmailVerificationToken
+                from ..models import EmailVerificationToken
 
                 token_obj = EmailVerificationToken.objects.get(token=token)
                 user = token_obj.user
@@ -125,6 +125,66 @@ class EmailVerificationView(APIView):
                 return Response({"error": message}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        """Verify email address via GET request (for email links)."""
+        token = request.GET.get('token')
+        if not token:
+            return Response(
+                {"error": "Token parameter is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        success, message = verify_email_with_token(token)
+
+        if success:
+            # Return a simple HTML response for email link clicks
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Email Verified - Bazary</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                    .success {{ color: #28a745; }}
+                    .container {{ max-width: 500px; margin: 0 auto; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1 class="success">✓ Email Verified Successfully!</h1>
+                    <p>{message}</p>
+                    <p>Your account is now active. You can close this window.</p>
+                </div>
+            </body>
+            </html>
+            """
+            from django.http import HttpResponse
+            return HttpResponse(html_content, content_type='text/html')
+        else:
+            # Return error HTML
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Verification Failed - Bazary</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                    .error {{ color: #dc3545; }}
+                    .container {{ max-width: 500px; margin: 0 auto; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1 class="error">✗ Verification Failed</h1>
+                    <p>{message}</p>
+                    <p>Please request a new verification email if needed.</p>
+                </div>
+            </body>
+            </html>
+            """
+            from django.http import HttpResponse
+            return HttpResponse(html_content, content_type='text/html', status=400)
 
 
 class ResendVerificationView(APIView):
@@ -409,7 +469,7 @@ class PasswordResetConfirmView(APIView):
 
             if success:
                 # Get user from token for response
-                from ..models.verification import PasswordResetToken
+                from ..models import PasswordResetToken
 
                 token_obj = PasswordResetToken.objects.get(token=token)
                 user = token_obj.user

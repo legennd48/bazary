@@ -100,9 +100,10 @@ def create_password_reset_token(user: User, request=None) -> PasswordResetToken:
 def send_verification_email(user: User, token: EmailVerificationToken) -> bool:
     """Send email verification email."""
     try:
-        # Use the Django API endpoint directly for verification
+        # Use the configurable site URL from settings
+        site_url = getattr(settings, "SITE_URL", "http://localhost:8001")
         verification_url = (
-            f"http://localhost:8001/api/v1/auth/verify-email/?token={token.token}"
+            f"{site_url}/api/v1/auth/verify-email/?token={token.token}"
         )
 
         context = {

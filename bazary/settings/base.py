@@ -524,6 +524,7 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@bazary.com")
 
 # Site Configuration
 SITE_NAME = config("SITE_NAME", default="Bazary")
+SITE_URL = config("SITE_URL", default="http://localhost:8001")
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
 
 # File Upload Settings

@@ -65,6 +65,21 @@ except ImportError:
 
 # Security settings for development - disable HTTPS redirect
 SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+# CSRF settings for development
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8001",
+    "http://127.0.0.1:8001",
+    "http://16.171.171.139:8001",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://16.171.171.139:8000",
+]
+
+# Allow all hosts in development for easier access
+ALLOWED_HOSTS = ["*"]
 
 # CORS settings for development
 CORS_ALLOW_ALL_ORIGINS = True

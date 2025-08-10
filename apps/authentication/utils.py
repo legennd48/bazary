@@ -102,9 +102,7 @@ def send_verification_email(user: User, token: EmailVerificationToken) -> bool:
     try:
         # Use the configurable site URL from settings
         site_url = getattr(settings, "SITE_URL", "http://localhost:8001")
-        verification_url = (
-            f"{site_url}/api/v1/auth/verify-email/?token={token.token}"
-        )
+        verification_url = f"{site_url}/api/v1/auth/verify-email/?token={token.token}"
 
         context = {
             "user": user,

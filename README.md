@@ -1,43 +1,56 @@
-# 🛒 Bazary - E-Commerce Backend Platform
+# 🛒 Bazary - Advanced E-Commerce Backend Platform
 
 [![CI/CD Pipeline](https://github.com/legennd48/bazary/workflows/CI%20Pipeline/badge.svg)](https://github.com/legennd48/bazary/actions)
 [![Code Coverage](https://codecov.io/gh/legennd48/bazary/branch/main/graph/badge.svg)](https://codecov.io/gh/legennd48/bazary)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **A production-ready Django e-commerce backend with advanced DevOps practices**
+> **A sophisticated, production-ready Django e-commerce platform with advanced payment processing, shopping cart functionality, and comprehensive product variant system**
 
-Bazary is a robust, scalable Django-based e-commerce backend system designed for real-world production environments. It emphasizes security, performance, and maintainability with comprehensive CI/CD pipelines, containerization, and modern development practices.
+Bazary is a feature-rich, enterprise-grade e-commerce backend that goes beyond basic product management. It includes complete payment processing with multiple gateway support, advanced shopping cart functionality, product variants system, and comprehensive user management - all built with production-ready DevOps practices.
 
 ## ✨ Key Features
 
-🛍️ **E-Commerce Core**
-- Product catalog management with categories and tags
-- Advanced filtering, sorting, and search capabilities
-- JWT-based authentication and authorization
-- Admin panel for product and user management
-- RESTful API with comprehensive documentation
+🛍️ **Advanced E-Commerce Core**
+- **Product Variants System**: Size, color, material options with individual pricing and stock
+- **Multi-Provider Payment Processing**: Chapa (Ethiopian), Stripe, PayPal integration
+- **Shopping Cart System**: Persistent carts with real-time calculations and stock validation
+- **Advanced Product Management**: Full catalog with images, categories, tags, and variants
+- **Transaction Management**: Complete payment lifecycle with webhooks and verification
+
+🔐 **Advanced Authentication & Security**
+- **Extended User System**: Custom profiles, addresses, and verification system
+- **JWT Authentication**: Access/refresh tokens with role-based permissions
+- **Security Features**: CSRF protection, secure payment handling, rate limiting
+- **User Roles**: Admin, staff, customer roles with granular permissions
+
+🛒 **Shopping Experience**
+- **Cart Management**: Add, update, remove items with real-time totals
+- **Guest Cart Support**: Session-based carts for non-authenticated users
+- **Price Calculations**: Automatic subtotal, tax, shipping calculations
+- **Stock Validation**: Real-time inventory checking during checkout
+- **Payment Processing**: Multi-gateway payment with transaction tracking
 
 🚀 **DevOps Excellence**
-- Complete CI/CD pipeline with GitHub Actions
-- Docker containerization for development and production
-- Git Flow workflow with automated testing
-- Multi-environment deployment (dev, staging, production)
-- Automated database migrations and static file collection
+- **Complete CI/CD Pipeline**: GitHub Actions with automated testing and deployment
+- **Docker Containerization**: Development and production-ready containers
+- **Git Flow Workflow**: Feature branching with automated quality checks
+- **Multi-Environment Support**: Development, staging, production configurations
+- **Database Optimization**: PostgreSQL with Redis caching and performance indexing
 
 🔒 **Security & Performance**
-- Industry-standard security practices
-- Database query optimization with indexing
-- Redis caching integration (planned)
-- Rate limiting and API throttling
-- Comprehensive logging and monitoring
+- **Payment Security**: PCI DSS ready with secure token handling
+- **Database Optimization**: Query optimization with select_related and prefetch_related
+- **Comprehensive Indexing**: Performance-optimized database indexes
+- **Rate Limiting**: API throttling and abuse prevention
+- **Monitoring Ready**: Comprehensive logging and error tracking
 
 📚 **Developer Experience**
-- Extensive documentation and setup guides
-- Pre-commit hooks for code quality
-- Automated testing with pytest and factory-boy
-- Swagger/OpenAPI documentation
-- Type hints and comprehensive test coverage
+- **Comprehensive API Documentation**: Swagger/OpenAPI with live examples
+- **Pre-commit Hooks**: Black, isort, flake8 for code quality
+- **Extensive Testing**: 80%+ test coverage with pytest and factory-boy
+- **Type Hints**: Full type annotation for better IDE support
+- **Complete Documentation**: Setup guides, API docs, and deployment guides
 
 ## 🚀 Quick Start
 
@@ -64,38 +77,47 @@ cp .env.example .env.dev
 docker-compose up --build
 
 # In a new terminal, run migrations
+### 2. Start Development Environment
+
+```bash
+# Start all services (API runs on port 8001)
+docker-compose up --build
+
+# In a new terminal, run migrations
 docker-compose exec web python manage.py migrate
 
 # Create superuser
 docker-compose exec web python manage.py createsuperuser
 
-# Load sample data (optional)
-docker-compose exec web python manage.py loaddata fixtures/sample_data.json
+# Setup payment providers (optional)
+docker-compose exec web python manage.py setup_payment_providers --provider chapa
 ```
 
 ### 3. Access the Application
 
-- **🌐 API Base**: http://localhost:8000/api/
-- **👤 Admin Panel**: http://localhost:8000/admin/
-- **📖 API Docs**: http://localhost:8000/swagger/
-- **📚 ReDoc**: http://localhost:8000/redoc/
+- **🌐 API Base**: http://localhost:8001/api/v1/
+- **👤 Admin Panel**: http://localhost:8001/admin/
+- **📖 API Docs**: http://localhost:8001/api/docs/
+- **📚 ReDoc**: http://localhost:8001/api/redoc/
 
 ## 📁 Project Structure
 
 ```
 bazary/
 ├── 📁 apps/                    # Django applications
-│   ├── authentication/        # User auth & JWT
-│   ├── products/              # Product management
-│   ├── categories/            # Category system
-│   └── core/                  # Shared utilities
+│   ├── authentication/        # Extended user system & JWT
+│   ├── products/              # Products with variants system
+│   ├── categories/            # Hierarchical categories
+│   ├── payments/              # Cart, payments, transactions
+│   └── core/                  # Shared utilities & models
 ├── 📁 bazary/                 # Main Django project
-│   └── settings/              # Environment configs
-├── 📁 docs/                   # Documentation
-├── 📁 docker/                 # Docker configurations
+│   └── settings/              # Environment configurations
+├── 📁 docs/                   # Comprehensive documentation
+│   ├── database-schema.md     # Database structure
+│   ├── payment-integration-completion.md  # Payment features
+│   └── cart-to-payment-guide.md  # Complete workflow guide
 ├── 📁 .github/workflows/      # CI/CD pipelines
-├── 📁 requirements/           # Dependencies
-├── 🐳 docker-compose.yml      # Development setup
+├──  docker-compose.yml      # Development setup
 ├── 🐳 Dockerfile             # Multi-stage build
 └── 📋 README.md              # This file
 ```
@@ -104,27 +126,121 @@ bazary/
 
 | Component | Technology | Version |
 |-----------|------------|---------|
-| **Backend** | Django + DRF | 5.0+ |
+| **Backend** | Django + DRF | 5.0.14 |
 | **Database** | PostgreSQL | 15+ |
 | **Cache** | Redis | 7+ |
 | **Authentication** | JWT (SimpleJWT) | Latest |
+| **Payments** | Chapa, Stripe, PayPal | Latest |
 | **Documentation** | Swagger/OpenAPI | 3.0 |
 | **Testing** | Pytest + Factory Boy | Latest |
 | **Containerization** | Docker + Compose | Latest |
 | **CI/CD** | GitHub Actions | Latest |
 | **Code Quality** | Black, Flake8, isort | Latest |
 
+## � API Overview
+
+### 🔐 Authentication Endpoints
+- **Registration**: `POST /api/v1/auth/register/`
+- **Login**: `POST /api/v1/auth/login/`
+- **Token Refresh**: `POST /api/v1/auth/token/refresh/`
+- **Password Reset**: `POST /api/v1/auth/password/reset/`
+- **Profile Management**: `/api/v1/auth/profile/`
+- **Address Management**: `/api/v1/auth/addresses/`
+
+### 🛍️ Product Management
+- **Products**: `/api/v1/products/`
+  - List, create, update, delete products
+  - Advanced filtering (category, price, availability)
+  - Search with multiple criteria
+- **Product Variants**: `/api/v1/products/{id}/variants/`
+  - Size, color, material options
+  - Individual pricing and stock levels
+  - Variant-specific attributes
+- **Categories**: `/api/v1/categories/`
+  - Hierarchical category structure
+  - Product associations and filtering
+  - Category-specific attributes
+
+### 🛒 Shopping Cart & Payments
+- **Cart Management**: `/api/v1/payments/carts/`
+  - `GET /carts/` - List user carts
+  - `POST /carts/` - Create new cart
+  - `GET /carts/current/` - Get/create current cart
+  - `POST /carts/{id}/add_item/` - Add item to cart
+  - `POST /carts/{id}/clear/` - Clear cart
+  - `GET /carts/{id}/summary/` - Get cart summary
+
+- **Cart Items**: `/api/v1/payments/cart-items/`
+  - Item-level CRUD operations
+  - Quantity updates and validation
+  - Real-time price calculations
+
+- **Transactions**: `/api/v1/payments/transactions/`
+  - `POST /initialize/` - Start payment process
+  - `POST /verify/` - Verify payment status
+  - `GET /history/` - Payment history
+  - `POST /refund/` - Process refunds
+
+- **Payment Methods**: `/api/v1/payments/methods/`
+  - Manage user payment methods
+  - Secure payment information storage
+  - Multi-provider support
+
+### 📊 Example API Response
+
+```json
+{
+  "count": 150,
+  "next": "http://localhost:8001/api/v1/products/?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "name": "Premium Wireless Headphones",
+      "description": "High-quality wireless headphones with noise cancellation",
+      "base_price": "299.99",
+      "category": {
+        "id": 1,
+        "name": "Electronics",
+        "slug": "electronics"
+      },
+      "variants": [
+        {
+          "id": 1,
+          "size": "Standard",
+          "color": "Black",
+          "material": "Plastic",
+          "price": "299.99",
+          "stock_quantity": 50,
+          "sku": "WH-001-BLK"
+        }
+      ],
+      "images": [
+        {
+          "id": 1,
+          "image": "/media/products/headphones-main.jpg",
+          "alt_text": "Black wireless headphones",
+          "is_primary": true
+        }
+      ],
+      "tags": ["wireless", "audio", "premium"],
+      "is_active": true,
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
 ## 📖 Documentation
 
 Comprehensive documentation is available in the `/docs` directory:
 
-- **[🏗️ Technical Architecture](./docs/technical-architecture.md)** - System design and components
-- **[🚀 DevOps Guide](./docs/devops-guide.md)** - CI/CD, Docker, and Git workflows
-- **[🌐 Deployment Guide](./docs/deployment-guide.md)** - Production deployment instructions
+- **[📊 Database Schema](./docs/database-schema.md)** - Complete data models and relationships
+- **[� Payment Integration](./docs/payment-integration-completion.md)** - Payment system documentation
+- **[🛒 Cart to Payment Guide](./docs/cart-to-payment-guide.md)** - Complete workflow examples
+- **[🗺️ Feature Roadmap](./docs/v1-feature-roadmap.md)** - Development roadmap and progress
+- **[🚀 Deployment Guide](./docs/deployment-guide.md)** - Production deployment instructions
 - **[💻 Development Guide](./docs/development-guide.md)** - Local setup and coding standards
-- **[📊 Database Schema](./docs/database-schema.md)** - Data models and relationships
-- **[🔐 Security Guide](./docs/security-guide.md)** - Security practices (coming soon)
-- **[🧪 Testing Strategy](./docs/testing-strategy.md)** - Testing approach (coming soon)
 
 ## 🏃‍♂️ Development Workflow
 
@@ -211,63 +327,124 @@ pytest apps/products/tests/test_models.py
 pytest -n auto
 ```
 
-## 📊 API Examples
+## 📊 API Usage Examples
 
-### Authentication
+### Authentication Flow
 
 ```bash
 # Register user
-curl -X POST http://localhost:8000/api/auth/register/ \
+curl -X POST http://localhost:8001/api/v1/auth/register/ \
   -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "password": "securepass123"}'
+  -d '{
+    "email": "user@example.com",
+    "password": "securepass123",
+    "first_name": "John",
+    "last_name": "Doe"
+  }'
 
 # Login
-curl -X POST http://localhost:8000/api/auth/login/ \
+curl -X POST http://localhost:8001/api/v1/auth/login/ \
   -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "password": "securepass123"}'
+  -d '{
+    "email": "user@example.com",
+    "password": "securepass123"
+  }'
 ```
 
-### Products
+### Cart to Payment Workflow
 
 ```bash
-# List products
-curl http://localhost:8000/api/products/
+# 1. Get or create cart
+curl -X GET http://localhost:8001/api/v1/payments/carts/current/ \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
-# Filter products
-curl "http://localhost:8000/api/products/?category=electronics&price_min=50"
-
-# Create product (admin only)
-curl -X POST http://localhost:8000/api/products/ \
+# 2. Add item to cart
+curl -X POST http://localhost:8001/api/v1/payments/carts/{cart_id}/add_item/ \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name": "New Product", "price": "99.99", "category": 1}'
+  -d '{
+    "product": 1,
+    "variant": 1,
+    "quantity": 2
+  }'
+
+# 3. Initialize payment
+curl -X POST http://localhost:8001/api/v1/payments/transactions/initialize/ \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cart": 1,
+    "amount": "199.98",
+    "currency": "ETB",
+    "provider": "chapa"
+  }'
 ```
 
-## 🗺️ Roadmap
+### Product Management
 
-### ✅ Phase 1: Core MVP (Current)
-- [x] Project setup and documentation
-- [x] Docker development environment
-- [x] CI/CD pipeline configuration
-- [ ] User authentication system
-- [ ] Product management APIs
-- [ ] Category system
-- [ ] API documentation
+```bash
+# List products with variants
+curl "http://localhost:8001/api/v1/products/?include_variants=true"
 
-### 🚧 Phase 2: Enhanced Features
-- [ ] Shopping cart functionality
-- [ ] Order management system
-- [ ] Payment integration (Stripe)
-- [ ] Email notifications
-- [ ] Advanced search with Elasticsearch
-- [ ] Image upload and optimization
+# Filter products by category and price
+curl "http://localhost:8001/api/v1/products/?category=electronics&price_min=50&price_max=500"
 
-### 🔮 Phase 3: Hybrid Commerce
+# Search products
+curl "http://localhost:8001/api/v1/products/?search=wireless+headphones"
+```
+
+## 🗺️ Roadmap & Current Status
+
+### ✅ Phase 1: Core MVP (COMPLETED)
+- [x] Project setup and documentation ✅
+- [x] Docker development environment ✅
+- [x] CI/CD pipeline configuration ✅
+- [x] Extended user authentication system ✅
+- [x] Advanced product management with variants ✅
+- [x] Hierarchical category system ✅
+- [x] Comprehensive API documentation ✅
+
+### ✅ Phase 2: Advanced E-Commerce (COMPLETED)
+- [x] Shopping cart functionality with persistence ✅
+- [x] Payment integration (Chapa, Stripe, PayPal ready) ✅
+- [x] Transaction management and verification ✅
+- [x] Product variants system (size, color, material) ✅
+- [x] Advanced filtering and search ✅
+- [x] Image upload and management ✅
+- [x] Stock management and validation ✅
+
+### 🚧 Phase 3: Order Management (IN PROGRESS)
+- [ ] Order creation and management system
+- [ ] Order status tracking and updates
+- [ ] Email notifications for orders
+- [ ] Invoice generation and management
+- [ ] Shipping integration
+
+### 🔮 Phase 4: Hybrid Commerce (PLANNED)
 - [ ] Service booking system
 - [ ] Appointment scheduling
 - [ ] Multi-vendor marketplace
 - [ ] Mobile app integration
 - [ ] Advanced analytics dashboard
+- [ ] Customer reviews and ratings
+
+## 💳 Payment Integration Status
+
+### ✅ Implemented Features
+- **Multiple Payment Gateways**: Chapa (Ethiopian), Stripe, PayPal support
+- **Transaction Management**: Complete payment lifecycle tracking
+- **Webhook Support**: Real-time payment status updates
+- **Refund System**: Full and partial refund processing
+- **Security**: PCI DSS ready with secure token handling
+- **Cart Integration**: Seamless cart-to-payment workflow
+
+### 🎯 Supported Payment Methods
+- **Chapa**: Ethiopian Birr (ETB) - Primary for local market
+- **Stripe**: International payments with multiple currencies
+- **PayPal**: Global payment processing
+- **Bank Transfer**: Direct bank payment support
+
+See the [Payment Integration Guide](./docs/payment-integration-completion.md) for detailed implementation.
 
 ## 🤝 Contributing
 

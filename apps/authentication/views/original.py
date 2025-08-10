@@ -3,6 +3,8 @@ Original authentication views.
 """
 
 from django.contrib.auth import get_user_model
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 from drf_spectacular.utils import extend_schema, inline_serializer
 from drf_yasg import openapi
@@ -38,6 +40,7 @@ from ..serializers import (
 User = get_user_model()
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class RegisterView(APIView):
     """
     ## User Registration

@@ -100,13 +100,16 @@ def create_password_reset_token(user: User, request=None) -> PasswordResetToken:
 def send_verification_email(user: User, token: EmailVerificationToken) -> bool:
     """Send email verification email."""
     try:
-        verification_url = f"{settings.FRONTEND_URL}/verify-email?token={token.token}"
+        # Use the configurable site URL from settings
+        site_url = getattr(settings, "SITE_URL", "http://localhost:8001")
+        verification_url = f"{site_url}/api/v1/auth/verify-email/?token={token.token}"
 
         context = {
             "user": user,
             "verification_url": verification_url,
             "site_name": getattr(settings, "SITE_NAME", "Bazary"),
             "token_expires_hours": 24,
+            "token": token.token,  # Add token separately for manual entry
         }
 
         html_message = render_to_string("emails/verify_email.html", context)

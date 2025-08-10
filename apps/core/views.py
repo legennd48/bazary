@@ -17,7 +17,7 @@ from apps.core.swagger_docs import SwaggerTags
 
 @swagger_auto_schema(
     method="get",
-    tags=[SwaggerTags.HEALTH],
+    tags=[SwaggerTags.SYSTEM_HEALTH],
     operation_summary="System Health Check",
     operation_description="""
     Comprehensive system health check endpoint that verifies the status of critical services.

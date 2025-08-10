@@ -51,6 +51,10 @@ services:
       - DATABASE_URL=postgres://bazary_user:bazary_dev_password@db:5432/bazary_dev
       - REDIS_URL=redis://redis:6379/1
       - DEBUG=True
+      # Optional: Override Chapa keys here
+      # - CHAPA_PUBLIC_KEY=CHASECK_TEST-your-key
+      # - CHAPA_SECRET_KEY=CHASECK_TEST-your-secret
+      # - CHAPA_ENCRYPTION_KEY=your-encryption-key
     depends_on:
       db:
         condition: service_healthy
@@ -59,6 +63,7 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
+             python manage.py setup_payment_providers --provider chapa || true &&
              python manage.py runserver 0.0.0.0:8000"
 
   # Nginx (for production-like setup)

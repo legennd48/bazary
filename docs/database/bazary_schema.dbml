@@ -1,6 +1,6 @@
 // Bazary E-commerce Database Schema
 // Generated for: dbdiagram.io
-// Last Updated: August 2, 2025
+// Last Updated: August 10, 2025
 // Purpose: Visual database architecture documentation
 
 Project bazary_ecommerce {
@@ -9,16 +9,552 @@ Project bazary_ecommerce {
     # Bazary E-commerce Platform Database
     
     Modern e-commerce database schema built with Django 5.0+ and PostgreSQL.
-    Supports hierarchical categories, comprehensive product management,
-    user authentication, and scalable architecture.
+    Supports hierarchical categories, comprehensive product management with variants,
+    user authentication, shopping cart, and payment processing.
     
     ## Key Features:
-    - UUID-based user identification
-    - Hierarchical category system
-    - Multi-image product support
-    - Flexible tagging system
+    - UUID-based user identification for enhanced security
+    - Hierarchical category system with unlimited nesting
+    - Product variants system (size, color, etc.) 
+    - Multi-image product support with variant-specific images
+    - Flexible tagging system for product categorization
+    - Shopping cart with session and user support
+    - Payment provider integration (Chapa, Stripe, etc.)
+    - Comprehensive user management with roles and verification
     - Optimized for performance and scalability
   '''
+}
+
+// =============================================================================
+// USERS & AUTHENTICATION
+// =============================================================================
+
+Table users {
+  id uuid [primary key, note: 'UUID primary key for enhanced security']
+  username varchar(150) [unique, not null, note: 'Login username']
+  email varchar(254) [unique, not null, note: 'Primary email address for login']
+  first_name varchar(150) [note: 'User first name']
+  last_name varchar(150) [note: 'User last name']
+  phone_number varchar(15) [note: 'Contact phone number']
+  is_verified boolean [default: false, note: 'Email verification status']
+  date_of_birth date [note: 'Birth date for age-restricted products']
+  avatar varchar(100) [note: 'Profile picture file path']
+  role varchar(20) [default: 'customer', note: 'User role (customer/staff/admin/super_admin)']
+  is_email_verified boolean [default: false, note: 'Email verification status']
+  failed_login_attempts integer [default: 0, note: 'Failed login attempt count']
+  account_locked_until timestamp [note: 'Account lock expiration']
+  is_active boolean [default: true, note: 'Account active status']
+  is_staff boolean [default: false, note: 'Staff admin access']
+  is_superuser boolean [default: false, note: 'Superuser admin access']
+  date_joined timestamp [default: `now()`, note: 'Account creation timestamp']
+  last_login timestamp [note: 'Last login timestamp']
+  created_at timestamp [default: `now()`, note: 'Record creation timestamp']
+  updated_at timestamp [default: `now()`, note: 'Record update timestamp']
+  
+  Note: '''
+    Extended Django user model with e-commerce and security features.
+    Uses UUID for enhanced security and future-proofing.
+    Supports role-based access control and comprehensive user management.
+  '''
+}
+
+Table user_profiles {
+  id uuid [primary key, note: 'Profile identifier']
+  user_id uuid [ref: - users.id, not null, note: 'One-to-one user reference']
+  bio text [note: 'User biography']
+  gender varchar(1) [note: 'Gender (M/F/O/N)']
+  website varchar(200) [note: 'User website URL']
+  location varchar(100) [note: 'User location']
+  timezone varchar(50) [default: 'UTC', note: 'User timezone']
+  language varchar(10) [default: 'en', note: 'Preferred language']
+  notification_preference varchar(10) [default: 'email', note: 'Notification method']
+  is_profile_public boolean [default: true, note: 'Profile visibility']
+  marketing_emails boolean [default: true, note: 'Marketing email consent']
+  newsletter boolean [default: false, note: 'Newsletter subscription']
+  login_count integer [default: 0, note: 'Total login count']
+  last_activity timestamp [note: 'Last activity timestamp']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table user_addresses {
+  id uuid [primary key, note: 'Address identifier']
+  user_id uuid [ref: > users.id, not null, note: 'User reference']
+  address_type varchar(20) [default: 'shipping', note: 'Address type (shipping/billing/both)']
+  is_default boolean [default: false, note: 'Default address flag']
+  street_address varchar(255) [not null, note: 'Street address']
+  apartment_number varchar(50) [note: 'Apartment/unit number']
+  city varchar(100) [not null, note: 'City']
+  state_province varchar(100) [not null, note: 'State/province']
+  postal_code varchar(20) [not null, note: 'Postal/ZIP code']
+  country varchar(100) [not null, note: 'Country']
+  recipient_name varchar(255) [note: 'Recipient name']
+  phone_number varchar(15) [note: 'Contact phone']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table email_verification_tokens {
+  id uuid [primary key, note: 'Token identifier']
+  user_id uuid [ref: > users.id, not null, note: 'User reference']
+  token varchar(100) [unique, not null, note: 'Verification token']
+  expires_at timestamp [not null, note: 'Token expiration']
+  is_used boolean [default: false, note: 'Token usage status']
+  created_at timestamp [default: `now()`]
+}
+
+Table password_reset_tokens {
+  id uuid [primary key, note: 'Token identifier']
+  user_id uuid [ref: > users.id, not null, note: 'User reference']
+  token varchar(100) [unique, not null, note: 'Reset token']
+  expires_at timestamp [not null, note: 'Token expiration']
+  is_used boolean [default: false, note: 'Token usage status']
+  ip_address inet [note: 'Request IP address']
+  user_agent text [note: 'Request user agent']
+  created_at timestamp [default: `now()`]
+}
+
+// =============================================================================
+// PRODUCT CATALOG
+// =============================================================================
+
+Table categories {
+  id bigint [primary key, increment, note: 'Category identifier']
+  name varchar(100) [unique, not null, note: 'Category display name']
+  slug varchar(100) [unique, not null, note: 'URL-friendly identifier']
+  description text [note: 'Category description']
+  image varchar(100) [note: 'Category image path']
+  parent_id bigint [ref: > categories.id, note: 'Parent category (hierarchical)']
+  is_active boolean [default: true, note: 'Category visibility status']
+  sort_order integer [default: 0, note: 'Display order']
+  created_at timestamp [default: `now()`, note: 'Creation timestamp']
+  updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+  
+  indexes {
+    (parent_id, is_active, sort_order) [name: 'idx_categories_hierarchy']
+    slug [name: 'idx_categories_slug']
+  }
+  
+  Note: '''
+    Hierarchical category system supporting unlimited nesting depth.
+    Categories can have parent-child relationships for organization.
+    Includes slug generation for SEO-friendly URLs.
+  '''
+}
+
+Table products {
+  id bigint [primary key, increment, note: 'Product identifier']
+  name varchar(255) [not null, note: 'Product display name']
+  slug varchar(255) [unique, not null, note: 'SEO-friendly URL identifier']
+  description text [not null, note: 'Detailed product description']
+  short_description varchar(500) [note: 'Brief product summary']
+  sku varchar(100) [unique, not null, note: 'Stock keeping unit']
+  price decimal(10,2) [not null, note: 'Current selling price']
+  compare_price decimal(10,2) [note: 'Original/MSRP price for discounts']
+  cost_price decimal(10,2) [note: 'Internal cost price']
+  category_id bigint [ref: > categories.id, not null, note: 'Product category']
+  track_inventory boolean [default: true, note: 'Enable inventory tracking']
+  stock_quantity integer [default: 0, note: 'Current stock level']
+  low_stock_threshold integer [default: 10, note: 'Low stock warning level']
+  is_active boolean [default: true, note: 'Product visibility status']
+  is_featured boolean [default: false, note: 'Featured product flag']
+  is_digital boolean [default: false, note: 'Digital product (no shipping)']
+  meta_title varchar(255) [note: 'SEO meta title']
+  meta_description text [note: 'SEO meta description']
+  created_by_id uuid [ref: > users.id, not null, note: 'Product creator']
+  created_at timestamp [default: `now()`, note: 'Creation timestamp']
+  updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+  
+  indexes {
+    (category_id, is_active) [name: 'idx_products_category_active']
+    (is_active, is_featured) [name: 'idx_products_featured']
+    (is_active, created_at) [name: 'idx_products_recent']
+    slug [name: 'idx_products_slug']
+    sku [name: 'idx_products_sku']
+    price [name: 'idx_products_price']
+  }
+  
+  Note: '''
+    Comprehensive product model supporting both physical and digital products.
+    Includes inventory management, pricing, SEO optimization, and categorization.
+    Stock tracking can be enabled/disabled per product.
+  '''
+}
+
+Table product_images {
+  id bigint [primary key, increment, note: 'Image identifier']
+  product_id bigint [ref: > products.id, not null, note: 'Associated product']
+  image varchar(100) [not null, note: 'Image file path']
+  alt_text varchar(255) [note: 'Accessibility alt text']
+  is_primary boolean [default: false, note: 'Primary product image']
+  sort_order integer [default: 0, note: 'Display order']
+  created_at timestamp [default: `now()`, note: 'Upload timestamp']
+  updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+  
+  indexes {
+    (product_id, is_primary) [name: 'idx_product_images_primary']
+    (product_id, sort_order) [name: 'idx_product_images_order']
+  }
+  
+  Note: '''
+    Multiple images per product with ordering and primary image designation.
+    Only one image per product can be marked as primary.
+    Supports accessibility with alt text for screen readers.
+  '''
+}
+
+Table tags {
+  id bigint [primary key, increment, note: 'Tag identifier']
+  name varchar(50) [unique, not null, note: 'Tag display name']
+  slug varchar(50) [unique, not null, note: 'URL-friendly identifier']
+  color varchar(7) [default: '#007bff', note: 'Display color (hex)']
+  created_at timestamp [default: `now()`, note: 'Creation timestamp']
+  updated_at timestamp [default: `now()`, note: 'Last update timestamp']
+  
+  indexes {
+    slug [name: 'idx_tags_slug']
+    name [name: 'idx_tags_name']
+  }
+  
+  Note: '''
+    Product tagging system for flexible categorization and filtering.
+    Tags can be used for promotions, features, or custom attributes.
+    Includes color coding for visual representation.
+  '''
+}
+
+Table products_tags {
+  id bigint [primary key, increment, note: 'Junction table identifier']
+  product_id bigint [ref: > products.id, not null, note: 'Product reference']
+  tag_id bigint [ref: > tags.id, not null, note: 'Tag reference']
+  
+  indexes {
+    (product_id, tag_id) [unique, name: 'idx_products_tags_unique']
+    product_id [name: 'idx_products_tags_product']
+    tag_id [name: 'idx_products_tags_tag']
+  }
+  
+  Note: '''
+    Many-to-many relationship between products and tags.
+    Enables flexible product labeling and filtering capabilities.
+  '''
+}
+
+// =============================================================================
+// PRODUCT VARIANTS SYSTEM
+// =============================================================================
+
+Table variant_options {
+  id bigint [primary key, increment, note: 'Variant option identifier']
+  name varchar(50) [unique, not null, note: 'Option name (e.g., Color, Size)']
+  display_name varchar(100) [not null, note: 'Frontend display name']
+  display_type varchar(20) [default: 'dropdown', note: 'UI display type']
+  is_required boolean [default: true, note: 'Required option flag']
+  sort_order integer [default: 0, note: 'Display order']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  Note: '''
+    Defines variant option types like Color, Size, Material.
+    Controls how options are displayed in the frontend interface.
+  '''
+}
+
+Table variant_option_values {
+  id bigint [primary key, increment, note: 'Option value identifier']
+  option_id bigint [ref: > variant_options.id, not null, note: 'Parent option reference']
+  value varchar(100) [not null, note: 'Value (e.g., Red, Large)']
+  display_name varchar(100) [not null, note: 'Frontend display name']
+  color_code varchar(7) [note: 'Hex color for color options']
+  image varchar(100) [note: 'Optional value image']
+  sort_order integer [default: 0, note: 'Display order']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (option_id, value) [unique, name: 'idx_variant_values_unique']
+  }
+  
+  Note: '''
+    Specific values for variant options (Red for Color, Large for Size).
+    Supports color codes and images for rich display options.
+  '''
+}
+
+Table product_variants {
+  id bigint [primary key, increment, note: 'Product variant identifier']
+  product_id bigint [ref: > products.id, not null, note: 'Base product reference']
+  sku varchar(100) [unique, not null, note: 'Unique variant SKU']
+  price decimal(10,2) [note: 'Variant-specific price override']
+  compare_price decimal(10,2) [note: 'Variant compare price']
+  cost_price decimal(10,2) [note: 'Variant cost price']
+  stock_quantity integer [default: 0, note: 'Variant stock level']
+  low_stock_threshold integer [default: 10, note: 'Variant stock warning']
+  is_active boolean [default: true, note: 'Variant availability']
+  weight decimal(8,2) [note: 'Weight in grams']
+  dimensions_length decimal(8,2) [note: 'Length in cm']
+  dimensions_width decimal(8,2) [note: 'Width in cm']
+  dimensions_height decimal(8,2) [note: 'Height in cm']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (product_id, is_active) [name: 'idx_variants_product_active']
+    sku [name: 'idx_variants_sku']
+    stock_quantity [name: 'idx_variants_stock']
+  }
+  
+  Note: '''
+    Specific product variants with individual pricing and inventory.
+    Each variant represents a unique combination of option values.
+  '''
+}
+
+Table product_variant_options {
+  id bigint [primary key, increment, note: 'Variant option link identifier']
+  variant_id bigint [ref: > product_variants.id, not null, note: 'Variant reference']
+  option_id bigint [ref: > variant_options.id, not null, note: 'Option reference']
+  value_id bigint [ref: > variant_option_values.id, not null, note: 'Value reference']
+  
+  indexes {
+    (variant_id, option_id) [unique, name: 'idx_variant_options_unique']
+  }
+  
+  Note: '''
+    Links variants to their option combinations (e.g., Red + Large).
+    Each variant must have one value per required option.
+  '''
+}
+
+Table product_variant_images {
+  id bigint [primary key, increment, note: 'Variant image identifier']
+  variant_id bigint [ref: > product_variants.id, not null, note: 'Variant reference']
+  image varchar(100) [not null, note: 'Variant-specific image']
+  alt_text varchar(255) [note: 'Accessibility alt text']
+  is_primary boolean [default: false, note: 'Primary variant image']
+  sort_order integer [default: 0, note: 'Display order']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (variant_id, is_primary) [name: 'idx_variant_images_primary']
+  }
+  
+  Note: '''
+    Variant-specific images (e.g., different colors showing different photos).
+    Supplements main product images with variant-specific visuals.
+  '''
+}
+
+// =============================================================================
+// PAYMENT SYSTEM
+// =============================================================================
+
+Table payment_providers {
+  id bigint [primary key, increment, note: 'Payment provider identifier']
+  name varchar(100) [unique, not null, note: 'Provider name']
+  provider_type varchar(20) [not null, note: 'Provider type (stripe/chapa/paypal)']
+  is_active boolean [default: true, note: 'Provider active status']
+  api_key varchar(200) [not null, note: 'Provider API key']
+  secret_key varchar(200) [not null, note: 'Provider secret key']
+  webhook_secret varchar(200) [note: 'Webhook verification secret']
+  test_mode boolean [default: true, note: 'Test/live mode flag']
+  supported_currencies json [note: 'Supported currency list']
+  configuration json [note: 'Additional provider settings']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  Note: '''
+    Payment gateway configurations for multiple providers.
+    Supports Chapa (Ethiopian), Stripe, PayPal, and other gateways.
+  '''
+}
+
+Table payment_methods {
+  id bigint [primary key, increment, note: 'Payment method identifier']
+  user_id uuid [ref: > users.id, not null, note: 'User reference']
+  provider_id bigint [ref: > payment_providers.id, not null, note: 'Provider reference']
+  method_type varchar(20) [not null, note: 'Method type (card/wallet/bank)']
+  name varchar(100) [not null, note: 'User-friendly method name']
+  is_default boolean [default: false, note: 'Default payment method']
+  is_active boolean [default: true, note: 'Method active status']
+  external_id varchar(200) [note: 'External provider ID']
+  metadata json [note: 'Additional method data']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (user_id, is_default) [name: 'idx_payment_methods_default']
+  }
+  
+  Note: '''
+    User payment methods linked to external payment providers.
+    Supports multiple payment types and default selection.
+  '''
+}
+
+Table transactions {
+  id uuid [primary key, note: 'Transaction UUID identifier']
+  user_id uuid [ref: > users.id, not null, note: 'User reference']
+  payment_provider_id bigint [ref: > payment_providers.id, not null, note: 'Provider reference']
+  payment_method_id bigint [ref: > payment_methods.id, note: 'Payment method reference']
+  amount decimal(10,2) [not null, note: 'Transaction amount']
+  currency varchar(3) [default: 'USD', note: 'Transaction currency']
+  status varchar(20) [default: 'pending', note: 'Transaction status']
+  transaction_type varchar(20) [not null, note: 'Transaction type (payment/refund)']
+  external_transaction_id varchar(200) [note: 'External provider transaction ID']
+  external_reference varchar(200) [note: 'External reference number']
+  description text [note: 'Transaction description']
+  metadata json [note: 'Additional transaction data']
+  processed_at timestamp [note: 'Processing completion time']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (user_id, status) [name: 'idx_transactions_user_status']
+    (payment_provider_id, status) [name: 'idx_transactions_provider_status']
+    external_transaction_id [name: 'idx_transactions_external_id']
+  }
+  
+  Note: '''
+    Payment transaction records with full audit trail.
+    Tracks all payment activities and external provider references.
+  '''
+}
+
+// =============================================================================
+// SHOPPING CART SYSTEM
+// =============================================================================
+
+Table carts {
+  id uuid [primary key, note: 'Cart UUID identifier']
+  user_id uuid [ref: > users.id, note: 'User reference (null for guest carts)']
+  session_key varchar(40) [note: 'Session key for guest carts']
+  status varchar(20) [default: 'active', note: 'Cart status (active/abandoned/converted)']
+  currency varchar(3) [default: 'USD', note: 'Cart currency']
+  subtotal decimal(10,2) [default: 0.00, note: 'Calculated subtotal']
+  tax_amount decimal(10,2) [default: 0.00, note: 'Tax amount']
+  shipping_amount decimal(10,2) [default: 0.00, note: 'Shipping cost']
+  discount_amount decimal(10,2) [default: 0.00, note: 'Discount amount']
+  total decimal(10,2) [default: 0.00, note: 'Total cart amount']
+  notes text [note: 'Customer cart notes']
+  metadata json [note: 'Additional cart metadata']
+  expires_at timestamp [note: 'Cart expiration time']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (user_id, status) [name: 'idx_carts_user_status']
+    session_key [name: 'idx_carts_session']
+    status [name: 'idx_carts_status']
+  }
+  
+  Note: '''
+    Shopping cart supporting both authenticated users and guest sessions.
+    Includes calculated pricing fields and expiration handling.
+  '''
+}
+
+Table cart_items {
+  id bigint [primary key, increment, note: 'Cart item identifier']
+  cart_id uuid [ref: > carts.id, not null, note: 'Cart reference']
+  product_id bigint [ref: > products.id, not null, note: 'Product reference']
+  variant_id bigint [ref: > product_variants.id, note: 'Optional variant reference']
+  quantity integer [not null, note: 'Item quantity']
+  unit_price decimal(10,2) [not null, note: 'Price at time of adding']
+  total_price decimal(10,2) [not null, note: 'Calculated total price']
+  notes text [note: 'Item-specific notes']
+  metadata json [note: 'Additional item metadata']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (cart_id, product_id) [name: 'idx_cart_items_cart_product']
+    (cart_id, variant_id) [name: 'idx_cart_items_cart_variant']
+  }
+  
+  Note: '''
+    Individual items in shopping carts with pricing snapshots.
+    Supports both base products and specific variants.
+  '''
+}
+
+// =============================================================================
+// RELATIONSHIPS DOCUMENTATION
+// =============================================================================
+
+// User Profile Relationships
+Ref: user_profiles.user_id - users.id [delete: cascade, note: 'One-to-one profile relationship']
+Ref: user_addresses.user_id > users.id [delete: cascade, note: 'User can have multiple addresses']
+Ref: email_verification_tokens.user_id > users.id [delete: cascade, note: 'Email verification tokens']
+Ref: password_reset_tokens.user_id > users.id [delete: cascade, note: 'Password reset tokens']
+
+// Product Catalog Relationships
+Ref: categories.parent_id > categories.id [delete: cascade, note: 'Self-referencing hierarchy']
+Ref: products.category_id > categories.id [delete: protect, note: 'Products belong to categories']
+Ref: products.created_by_id > users.id [delete: protect, note: 'Products track their creator']
+Ref: product_images.product_id > products.id [delete: cascade, note: 'Product images']
+Ref: products_tags.product_id > products.id [delete: cascade, note: 'Product-tag relationships']
+Ref: products_tags.tag_id > tags.id [delete: cascade, note: 'Tag-product relationships']
+
+// Product Variants Relationships
+Ref: variant_option_values.option_id > variant_options.id [delete: cascade, note: 'Option values belong to options']
+Ref: product_variants.product_id > products.id [delete: cascade, note: 'Variants belong to products']
+Ref: product_variant_options.variant_id > product_variants.id [delete: cascade, note: 'Variant option assignments']
+Ref: product_variant_options.option_id > variant_options.id [delete: cascade, note: 'Option references']
+Ref: product_variant_options.value_id > variant_option_values.id [delete: cascade, note: 'Value references']
+Ref: product_variant_images.variant_id > product_variants.id [delete: cascade, note: 'Variant-specific images']
+
+// Payment System Relationships
+Ref: payment_methods.user_id > users.id [delete: cascade, note: 'User payment methods']
+Ref: payment_methods.provider_id > payment_providers.id [delete: protect, note: 'Payment provider reference']
+Ref: transactions.user_id > users.id [delete: protect, note: 'User transactions']
+Ref: transactions.payment_provider_id > payment_providers.id [delete: protect, note: 'Transaction provider']
+Ref: transactions.payment_method_id > payment_methods.id [delete: set_null, note: 'Optional payment method reference']
+
+// Shopping Cart Relationships
+Ref: carts.user_id > users.id [delete: cascade, note: 'User carts (null for guest carts)']
+Ref: cart_items.cart_id > carts.id [delete: cascade, note: 'Cart items belong to carts']
+Ref: cart_items.product_id > products.id [delete: cascade, note: 'Cart items reference products']
+Ref: cart_items.variant_id > product_variants.id [delete: cascade, note: 'Optional variant reference']
+
+// =============================================================================
+// TABLE GROUPS FOR VISUALIZATION
+// =============================================================================
+
+TableGroup "Authentication & Users" {
+  users
+  user_profiles
+  user_addresses
+  email_verification_tokens
+  password_reset_tokens
+}
+
+TableGroup "Product Catalog" {
+  categories
+  products
+  product_images
+  tags
+  products_tags
+}
+
+TableGroup "Product Variants" {
+  variant_options
+  variant_option_values
+  product_variants
+  product_variant_options
+  product_variant_images
+}
+
+TableGroup "Payment System" {
+  payment_providers
+  payment_methods
+  transactions
+}
+
+TableGroup "Shopping Cart" {
+  carts
+  cart_items
 }
 
 // =============================================================================

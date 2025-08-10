@@ -47,7 +47,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_SETTINGS_MODULE=bazary.settings.production
     env_file:
       - .env
     depends_on:

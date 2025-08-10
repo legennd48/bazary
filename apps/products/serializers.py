@@ -1,5 +1,7 @@
 """
 Products serializers.
+
+This module imports all product-related serializers from the serializers package.
 """
 
 from decimal import Decimal
@@ -9,6 +11,9 @@ from rest_framework import serializers
 from apps.categories.serializers import CategorySerializer
 
 from .models import Product, ProductImage, Tag
+
+# Import all serializers from the serializers package
+from .serializers import *  # noqa: F401,F403
 
 
 class TagSerializer(serializers.ModelSerializer):

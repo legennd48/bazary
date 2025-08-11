@@ -137,7 +137,41 @@ bazary/
 | **CI/CD** | GitHub Actions | Latest |
 | **Code Quality** | Black, Flake8, isort | Latest |
 
-## � API Overview
+## 📊 Database Architecture
+
+Bazary uses a robust PostgreSQL database design optimized for e-commerce operations. The schema supports complex product relationships, user management, shopping cart persistence, and multi-gateway payment processing.
+
+### Entity Relationship Diagram
+
+![Bazary Database ERD](./docs/database/Bazary%20ERD.png)
+
+### Core Database Features
+
+🏗️ **Normalized Design**
+- **User Management**: Extended user profiles with addresses and verification
+- **Product Catalog**: Products with variants, categories, tags, and images
+- **Shopping Cart**: Persistent carts with real-time calculations
+- **Payment System**: Multi-provider transactions with webhook support
+
+📈 **Performance Optimizations**
+- **Strategic Indexing**: Composite indexes for filtering and search operations
+- **Query Optimization**: `select_related` and `prefetch_related` for N+1 prevention
+- **Database Constraints**: Data integrity with foreign keys and check constraints
+- **Connection Pooling**: Efficient database connection management
+
+🔗 **Key Relationships**
+- **One-to-Many**: User → Products, Categories → Products, Cart → CartItems
+- **Many-to-Many**: Products ↔ Tags, ProductVariants ↔ VariantOptions
+- **Hierarchical**: Categories with parent-child relationships
+- **Transaction Flow**: Cart → Transaction → PaymentMethod → PaymentProvider
+
+📚 **Detailed Documentation**
+- **[Complete Schema](./docs/database/schema.md)** - Full data models and field definitions
+- **[Relationships](./docs/database/relationships.md)** - Detailed relationship mappings
+- **[Data Dictionary](./docs/database/data_dictionary.md)** - Field-by-field documentation
+- **[DBML Schema](./docs/database/bazary_schema.dbml)** - Machine-readable schema definition
+
+## 🌐 API Overview
 
 ### 🔐 Authentication Endpoints
 - **Registration**: `POST /api/v1/auth/register/`

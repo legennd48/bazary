@@ -565,36 +565,43 @@ class Command(BaseCommand):
             # Modify name to make it unique
             product_name = f"{template['name']} - Model {i+1}"
 
-            # Create product
-            product = Product.objects.create(
+            # Check if product already exists
+            product, created = Product.objects.get_or_create(
                 name=product_name,
-                description=template["description"],
-                short_description=template["description"][:100],
-                price=Decimal(str(template["price"])),
-                compare_price=(
-                    Decimal(str(template["price"] + 50.00)) if i % 3 == 0 else None
-                ),
-                category=category,
-                stock_quantity=50 + (i % 100),
-                low_stock_threshold=10,
-                is_active=True,
-                is_featured=i % 5 == 0,  # Every 5th product is featured
-                is_digital=category.name in ["Books"]
-                and i % 4 == 0,  # Some books are digital
-                track_inventory=True,
-                created_by=admin_user,
+                defaults={
+                    'description': template["description"],
+                    'short_description': template["description"][:100],
+                    'price': Decimal(str(template["price"])),
+                    'compare_price': (
+                        Decimal(str(template["price"] + 50.00)) if i % 3 == 0 else None
+                    ),
+                    'category': category,
+                    'stock_quantity': 50 + (i % 100),
+                    'low_stock_threshold': 10,
+                    'is_active': True,
+                    'is_featured': i % 5 == 0,  # Every 5th product is featured
+                    'is_digital': category.name in ["Books"]
+                    and i % 4 == 0,  # Some books are digital
+                    'track_inventory': True,
+                    'created_by': admin_user,
+                }
             )
 
-            # Add tags (1-3 random tags per product)
-            import random
+            # Only add tags if product was newly created
+            if created:
+                # Add tags (1-3 random tags per product)
+                import random
 
-            product_tags = random.sample(tags, min(random.randint(1, 3), len(tags)))
-            product.tags.set(product_tags)
+                product_tags = random.sample(tags, min(random.randint(1, 3), len(tags)))
+                product.tags.set(product_tags)
 
-            products_created += 1
+                products_created += 1
 
-            if verbose and products_created % 10 == 0:
-                self.stdout.write(f"  ✓ Created {products_created} products...")
+                if verbose and products_created % 10 == 0:
+                    self.stdout.write(f"  ✓ Created {products_created} products...")
+            else:
+                if verbose:
+                    self.stdout.write(f"  ⏭️ Skipped existing product: {product_name}")
 
         self.stdout.write(self.style.SUCCESS(f"✅ Created {products_created} products"))
 

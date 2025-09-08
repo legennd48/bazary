@@ -148,48 +148,7 @@ class ProductViewSet(RateLimitMixin, viewsets.ModelViewSet):
         tags=[SwaggerTags.ADMIN_PRODUCT_MANAGEMENT],
         operation_summary="Create Product",
         operation_description="Create a new product (Admin only)",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "name": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Product name"
-                ),
-                "description": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Detailed description"
-                ),
-                "short_description": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Brief description"
-                ),
-                "price": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Product price"
-                ),
-                "category": openapi.Schema(
-                    type=openapi.TYPE_INTEGER, description="Category ID"
-                ),
-                "sku": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Stock Keeping Unit"
-                ),
-                "stock_quantity": openapi.Schema(
-                    type=openapi.TYPE_INTEGER, description="Stock quantity"
-                ),
-                "track_inventory": openapi.Schema(
-                    type=openapi.TYPE_BOOLEAN, description="Enable inventory tracking"
-                ),
-                "is_featured": openapi.Schema(
-                    type=openapi.TYPE_BOOLEAN, description="Mark as featured"
-                ),
-                "is_active": openapi.Schema(
-                    type=openapi.TYPE_BOOLEAN, description="Product is active"
-                ),
-                "tags": openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Schema(type=openapi.TYPE_INTEGER),
-                    description="Tag IDs",
-                ),
-            },
-            required=["name", "description", "price", "category"],
-            example=SwaggerExamples.PRODUCT_CREATE_EXAMPLE,
-        ),
+    request_body=ProductCreateUpdateSerializer,
         responses={
             201: openapi.Response(
                 "Product created successfully",
@@ -665,17 +624,23 @@ class TagViewSet(viewsets.ModelViewSet):
                         {
                             "id": 1,
                             "name": "wireless",
-                            "description": "Wireless technology products",
+                            "slug": "wireless",
+                            "color": "#4287f5",
+                            "created_at": "2025-01-01T12:00:00Z",
                         },
                         {
                             "id": 2,
                             "name": "premium",
-                            "description": "Premium quality products",
+                            "slug": "premium",
+                            "color": "#222222",
+                            "created_at": "2025-01-02T12:00:00Z",
                         },
                         {
                             "id": 3,
                             "name": "electronics",
-                            "description": "Electronic devices",
+                            "slug": "electronics",
+                            "color": "#00aa88",
+                            "created_at": "2025-01-03T12:00:00Z",
                         },
                     ]
                 },
@@ -694,7 +659,7 @@ class TagViewSet(viewsets.ModelViewSet):
             200: openapi.Response(
                 "Tag details retrieved successfully",
                 TagSerializer,
-                examples={"application/json": SwaggerExamples.TAG_CREATE_EXAMPLE},
+                examples={"application/json": SwaggerExamples.TAG_RESPONSE_EXAMPLE},
             ),
             404: openapi.Response("Tag not found"),
         },
@@ -707,24 +672,12 @@ class TagViewSet(viewsets.ModelViewSet):
         tags=[SwaggerTags.TAGS],
         operation_summary="Create Tag",
         operation_description="Create a new tag (Admin only)",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "name": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Tag name"
-                ),
-                "description": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Tag description"
-                ),
-            },
-            required=["name"],
-            example=SwaggerExamples.TAG_CREATE_EXAMPLE,
-        ),
+    request_body=TagSerializer,
         responses={
             201: openapi.Response(
                 "Tag created successfully",
                 TagSerializer,
-                examples={"application/json": SwaggerExamples.TAG_CREATE_EXAMPLE},
+        examples={"application/json": SwaggerExamples.TAG_RESPONSE_EXAMPLE},
             ),
             400: openapi.Response("Validation error"),
             401: openapi.Response("Unauthorized - Admin access required"),

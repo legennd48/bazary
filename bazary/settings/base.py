@@ -454,6 +454,10 @@ Comprehensive testing guides available for each endpoint group.
             "description": "Product variant management for size, color, and other product options.",
         },
         {
+            "name": "15 🖼️ Product Images",
+            "description": "Upload, list, and manage product images and galleries.",
+        },
+        {
             "name": "16 ⚙️ Variant Options",
             "description": "Variant option definitions and value management for product customization.",
         },
@@ -507,6 +511,7 @@ Comprehensive testing guides available for each endpoint group.
     # Postprocessing hooks to tweak schema after generation
     "POSTPROCESSING_HOOKS": [
         "apps.core.schema_hooks.rename_api_tag_to_z_advanced",
+    "apps.core.schema_hooks.normalize_and_canonicalize_tags",
     ],
 }
 

@@ -9,6 +9,8 @@ from pathlib import Path
 from django.conf import settings
 
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 
 
 def get_captured_example(endpoint_name, method, status_code):
@@ -36,7 +38,7 @@ def get_captured_example(endpoint_name, method, status_code):
                     return data["response_data"]
                 else:
                     return data
-    except Exception as e:
+    except Exception:
         # Silently handle errors in production
         pass
 
@@ -60,77 +62,73 @@ def get_example_or_fallback(endpoint_name, method, status_code, fallback_example
     return captured if captured is not None else fallback_example
 
 
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
-
-
 class SwaggerTags:
-    """
-    🎯 Organized API Tags for Optimal Developer Experience
+  """
+  🎯 Organized API Tags for Optimal Developer Experience
 
-    Tags are strategically ordered to follow the typical user/developer journey:
-    1. Start with authentication (essential for most operations)
-    2. User management and profiles
-    3. Admin operations (grouped by domain)
-    4. Product catalog and discovery
-    5. Shopping and cart management
-    6. Payment processing
-    7. System utilities and testing
+  Tags are strategically ordered to follow the typical user/developer journey:
+  1. Start with authentication (essential for most operations)
+  2. User management and profiles
+  3. Admin operations (grouped by domain)
+  4. Product catalog and discovery
+  5. Shopping and cart management
+  6. Payment processing
+  7. System utilities and testing
 
-    Each tag includes emojis for visual recognition and priority numbers for sorting.
-    """
+  Each tag includes emojis for visual recognition and priority numbers for sorting.
+  """
 
-    # 🔐 AUTHENTICATION & ACCOUNT MANAGEMENT (Priority 1)
-    AUTHENTICATION = "01 🔐 Authentication"
-    EMAIL_VERIFICATION = "02 � Email Verification"
-    PASSWORD_MANAGEMENT = "03 🔑 Password Management"
-    TOKEN_MANAGEMENT = "04 🎫 Token Management"
+  # 🔐 AUTHENTICATION & ACCOUNT MANAGEMENT (Priority 1)
+  AUTHENTICATION = "01 🔐 Authentication"
+  EMAIL_VERIFICATION = "02 📧 Email Verification"
+  PASSWORD_MANAGEMENT = "03 🔑 Password Management"
+  TOKEN_MANAGEMENT = "04 🎫 Token Management"
 
-    # 👤 USER MANAGEMENT (Priority 2)
-    USER_PROFILE = "05 👤 User Profile"
-    USER_ADDRESSES = "06 🏠 User Addresses"
-    USER_ACTIVITY = "07 � User Activity"
+  # 👤 USER MANAGEMENT (Priority 2)
+  USER_PROFILE = "05 👤 User Profile"
+  USER_ADDRESSES = "06 🏠 User Addresses"
+  USER_ACTIVITY = "07 📊 User Activity"
 
-    # 🛡️ ADMIN OPERATIONS (Priority 3)
-    ADMIN_USER_MANAGEMENT = "08 🛡️ Admin - User Management"
-    ADMIN_PRODUCT_MANAGEMENT = "09 🛡️ Admin - Product Management"
-    ADMIN_ANALYTICS = "10 🛡️ Admin - Analytics"
+  # 🛡️ ADMIN OPERATIONS (Priority 3)
+  ADMIN_USER_MANAGEMENT = "08 🛡️ Admin - User Management"
+  ADMIN_PRODUCT_MANAGEMENT = "09 🛡️ Admin - Product Management"
+  ADMIN_ANALYTICS = "10 🛡️ Admin - Analytics"
 
-    # 📂 CATALOG MANAGEMENT (Priority 4)
-    CATEGORIES = "11 📂 Categories"
-    TAGS = "12 🏷️ Tags"
+  # 📂 CATALOG MANAGEMENT (Priority 4)
+  CATEGORIES = "11 📂 Categories"
+  TAGS = "12 🏷️ Tags"
 
-    # 📦 PRODUCT MANAGEMENT (Priority 5)
-    PRODUCTS = "13 📦 Products"
-    PRODUCT_VARIANTS = "14 � Product Variants"
-    PRODUCT_IMAGES = "15 �️ Product Images"
-    VARIANT_OPTIONS = "16 ⚙️ Variant Options"
+  # 📦 PRODUCT MANAGEMENT (Priority 5)
+  PRODUCTS = "13 📦 Products"
+  PRODUCT_VARIANTS = "14 🔄 Product Variants"
+  PRODUCT_IMAGES = "15 🖼️ Product Images"
+  VARIANT_OPTIONS = "16 ⚙️ Variant Options"
 
-    # 🛒 SHOPPING EXPERIENCE (Priority 6)
-    PRODUCT_DISCOVERY = "17 � Product Discovery"
-    PRODUCT_SEARCH = "18 🔎 Search & Filters"
-    SHOPPING_CART = "19 🛒 Shopping Cart"
-    CART_MANAGEMENT = "20 �️ Cart Management"
+  # 🛒 SHOPPING EXPERIENCE (Priority 6)
+  PRODUCT_DISCOVERY = "17 🔍 Product Discovery"
+  PRODUCT_SEARCH = "18 🔎 Search & Filters"
+  SHOPPING_CART = "19 🛒 Shopping Cart"
+  CART_MANAGEMENT = "20 🧺 Cart Management"
 
-    # 💳 PAYMENT & CHECKOUT (Priority 7)
-    PAYMENT_PROVIDERS = "21 🏦 Payment Providers"
-    PAYMENT_METHODS = "22 💳 Payment Methods"
-    TRANSACTIONS = "23 � Transactions"
-    PAYMENT_WEBHOOKS = "24 � Payment Webhooks"
-    PAYMENT_CALLBACKS = "25 � Payment Callbacks"
+  # 💳 PAYMENT & CHECKOUT (Priority 7)
+  PAYMENT_PROVIDERS = "21 🏦 Payment Providers"
+  PAYMENT_METHODS = "22 💳 Payment Methods"
+  TRANSACTIONS = "23 💰 Transactions"
+  PAYMENT_WEBHOOKS = "24 🔔 Payment Webhooks"
+  PAYMENT_CALLBACKS = "25 ↩️ Payment Callbacks"
 
-    # 🔧 SYSTEM & UTILITIES (Priority 8)
-    SYSTEM_HEALTH = "26 🏥 System Health"
-    API_TESTING = "27 🧪 API Testing"
-    UTILITIES = "28 🔧 Utilities"
+  # 🔧 SYSTEM & UTILITIES (Priority 8)
+  SYSTEM_HEALTH = "26 🏥 System Health"
+  API_TESTING = "27 🧪 API Testing"
+  UTILITIES = "28 🔧 Utilities"
 
-    # 📚 DOCUMENTATION & GUIDES (Priority 9)
-    TESTING_GUIDES = "29 📚 Testing Guides"
-    API_DOCUMENTATION = "30 📖 API Documentation"
+  # 📚 DOCUMENTATION & GUIDES (Priority 9)
+  TESTING_GUIDES = "29 📚 Testing Guides"
+  API_DOCUMENTATION = "30 📖 API Documentation"
 
-    # ⚠️ Legacy tags (for backward compatibility - marked for migration)
-    USERS = USER_PROFILE  # Redirect to new tag
-    PAYMENT = PAYMENT_PROVIDERS  # Redirect to new tag
+  # ⚠️ Legacy tags (for backward compatibility - marked for migration)
+  USERS = USER_PROFILE  # Redirect to new tag
+  PAYMENT = PAYMENT_PROVIDERS  # Redirect to new tag
 
 
 # Enhanced Tag Descriptions for better documentation
@@ -280,108 +278,114 @@ class SwaggerResponses:
 
 
 class SwaggerExamples:
-    """Example data for API documentation."""
+  """Example data for API documentation."""
 
-    # Product Examples
-    PRODUCT_CREATE_EXAMPLE = {
-        "name": "Premium Wireless Headphones",
-        "description": "High-quality wireless headphones with noise cancellation and 30-hour battery life. Perfect for music lovers and professionals.",
-        "short_description": "Premium wireless headphones with noise cancellation",
-        "price": "299.99",
-        "category": 1,
-        "sku": "WH-XB900N",
-        "stock_quantity": 50,
-        "track_inventory": True,
-        "is_featured": True,
-        "is_active": True,
-        "tags": [1, 2, 3],
-    }
+  # Product Examples
+  PRODUCT_CREATE_EXAMPLE = {
+    "name": "Premium Wireless Headphones",
+    "description": "High-quality wireless headphones with noise cancellation and 30-hour battery life. Perfect for music lovers and professionals.",
+    "short_description": "Premium wireless headphones with noise cancellation",
+    "price": "299.99",
+    "category": 1,
+    "compare_price": "399.99",
+    "cost_price": "199.99",
+  "tags": [1, 2, 3],
+    "stock_quantity": 50,
+    "track_inventory": True,
+    "is_featured": True,
+    "is_active": True,
+  }
 
-    PRODUCT_RESPONSE_EXAMPLE = {
-        "id": 1,
-        "name": "Premium Wireless Headphones",
-        "description": "High-quality wireless headphones with noise cancellation and 30-hour battery life. Perfect for music lovers and professionals.",
-        "short_description": "Premium wireless headphones with noise cancellation",
-        "price": "299.99",
-        "category": {"id": 1, "name": "Electronics", "slug": "electronics"},
-        "sku": "WH-XB900N",
-        "stock_quantity": 50,
-        "track_inventory": True,
-        "is_featured": True,
-        "is_active": True,
-        "is_in_stock": True,
-        "is_low_stock": False,
-        "tags": [
-            {"id": 1, "name": "wireless"},
-            {"id": 2, "name": "headphones"},
-            {"id": 3, "name": "premium"},
-        ],
-        "created_at": "2025-01-01T12:00:00Z",
-        "updated_at": "2025-01-01T12:00:00Z",
-        "created_by": {
-            "id": "user-uuid",
-            "email": "admin@bazary.com",
-            "username": "admin",
-        },
-    }
+  PRODUCT_RESPONSE_EXAMPLE = {
+    "id": 1,
+    "name": "Premium Wireless Headphones",
+    "description": "High-quality wireless headphones with noise cancellation and 30-hour battery life. Perfect for music lovers and professionals.",
+    "short_description": "Premium wireless headphones with noise cancellation",
+    "price": "299.99",
+    "compare_price": "399.99",
+    "category": {"id": 1, "name": "Electronics", "slug": "electronics"},
+    "sku": "WH-XB900N",
+    "stock_quantity": 50,
+    "track_inventory": True,
+    "is_featured": True,
+    "is_active": True,
+    "is_in_stock": True,
+    "is_low_stock": False,
+    "tags": [
+      {"id": 1, "name": "wireless", "slug": "wireless", "color": "#4287f5"},
+      {"id": 2, "name": "headphones", "slug": "headphones", "color": "#111111"},
+      {"id": 3, "name": "premium", "slug": "premium", "color": "#222222"},
+    ],
+    "created_at": "2025-01-01T12:00:00Z",
+    "updated_at": "2025-01-01T12:00:00Z",
+    "created_by": "admin",
+  }
 
-    # Authentication Examples
-    REGISTER_EXAMPLE = {
-        "email": "user@example.com",
-        "username": "newuser",
-        "password": "SecurePass123!",
-        "password_confirm": "SecurePass123!",
-        "first_name": "John",
-        "last_name": "Doe",
-        "phone_number": "+1234567890",
-    }
+  # Authentication Examples
+  REGISTER_EXAMPLE = {
+    "email": "user@example.com",
+    "username": "newuser",
+    "password": "SecurePass123!",
+    "password_confirm": "SecurePass123!",
+    "first_name": "John",
+    "last_name": "Doe",
+    "phone_number": "+1234567890",
+  }
 
-    LOGIN_EXAMPLE = {"email": "user@example.com", "password": "SecurePass123!"}
+  LOGIN_EXAMPLE = {"email": "user@example.com", "password": "SecurePass123!"}
 
-    LOGIN_RESPONSE_EXAMPLE = {
-        "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-        "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-        "user": {
-            "id": "user-uuid",
-            "email": "user@example.com",
-            "username": "newuser",
-            "first_name": "John",
-            "last_name": "Doe",
-        },
-    }
+  LOGIN_RESPONSE_EXAMPLE = {
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "user": {
+      "id": "user-uuid",
+      "email": "user@example.com",
+      "username": "newuser",
+      "first_name": "John",
+      "last_name": "Doe",
+    },
+  }
 
-    # Category Examples
-    CATEGORY_CREATE_EXAMPLE = {
-        "name": "Electronics",
-        "description": "Electronic devices and accessories",
-        "parent": None,
-        "is_active": True,
-        "sort_order": 1,
-    }
+  # Category Examples
+  CATEGORY_CREATE_EXAMPLE = {
+    "name": "Electronics",
+    "description": "Electronic devices and accessories",
+    "parent": None,
+    "is_active": True,
+    "sort_order": 1,
+  }
 
-    CATEGORY_RESPONSE_EXAMPLE = {
-        "id": 1,
-        "name": "Electronics",
-        "description": "Electronic devices and accessories",
-        "slug": "electronics",
-        "parent": None,
-        "is_active": True,
-        "sort_order": 1,
-        "image": None,
-        "created_at": "2025-01-01T12:00:00Z",
-        "updated_at": "2025-01-01T12:00:00Z",
-        "subcategories": [
-            {"id": 2, "name": "Smartphones", "slug": "smartphones"},
-            {"id": 3, "name": "Laptops", "slug": "laptops"},
-        ],
-        "product_count": 45,
-    }
+  CATEGORY_RESPONSE_EXAMPLE = {
+    "id": 1,
+    "name": "Electronics",
+    "description": "Electronic devices and accessories",
+    "slug": "electronics",
+    "parent": None,
+    "is_active": True,
+    "sort_order": 1,
+    "image": None,
+    "created_at": "2025-01-01T12:00:00Z",
+    "updated_at": "2025-01-01T12:00:00Z",
+    "subcategories": [
+      {"id": 2, "name": "Smartphones", "slug": "smartphones"},
+      {"id": 3, "name": "Laptops", "slug": "laptops"},
+    ],
+    "products_count": 45,
+  }
 
-    # Tag Examples
-    TAG_CREATE_EXAMPLE = {
-        "name": "wireless",
-        "description": "Wireless technology products",
-    }
+  # Tag Examples
+  TAG_CREATE_EXAMPLE = {
+    "name": "wireless",
+    "color": "#4287f5",
+  }
+
+  TAG_RESPONSE_EXAMPLE = {
+    "id": 1,
+    "name": "wireless",
+    "slug": "wireless",
+    "color": "#4287f5",
+    "created_at": "2025-01-01T12:00:00Z",
+  }
 
 
 class SwaggerParameters:
@@ -473,8 +477,8 @@ class TestingInstructions:
 
 #### 1. User Registration
 ```bash
-curl -X POST "http://localhost:8001/api/v1/auth/register/" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://localhost:8001/api/v1/auth/register/" \
+  -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
     "username": "testuser",
@@ -490,8 +494,8 @@ curl -X POST "http://localhost:8001/api/v1/auth/register/" \\
 #### 2. Email Verification
 ```bash
 # Via API (POST)
-curl -X POST "http://localhost:8001/api/v1/auth/verify-email/" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://localhost:8001/api/v1/auth/verify-email/" \
+  -H "Content-Type: application/json" \
   -d '{"token": "YOUR_VERIFICATION_TOKEN"}'
 
 # Via Link (GET) - click email link or:
@@ -500,8 +504,8 @@ curl "http://localhost:8001/api/v1/auth/verify-email/?token=YOUR_TOKEN"
 
 #### 3. User Login
 ```bash
-curl -X POST "http://localhost:8001/api/v1/auth/token/" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://localhost:8001/api/v1/auth/token/" \
+  -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
     "password": "SecurePass123!"
@@ -511,25 +515,25 @@ curl -X POST "http://localhost:8001/api/v1/auth/token/" \\
 
 #### 4. Access Protected Resources
 ```bash
-curl -X GET "http://localhost:8001/api/v1/auth/profile/" \\
+curl -X GET "http://localhost:8001/api/v1/auth/profile/" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 #### 5. Token Refresh
 ```bash
-curl -X POST "http://localhost:8001/api/v1/auth/token/refresh/" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://localhost:8001/api/v1/auth/token/refresh/" \
+  -H "Content-Type: application/json" \
   -d '{"refresh": "YOUR_REFRESH_TOKEN"}'
 ```
 
 ### 🔄 Password Reset Flow
 ```bash
 # 1. Request reset
-curl -X POST "http://localhost:8001/api/v1/auth/password-reset/" \\
+curl -X POST "http://localhost:8001/api/v1/auth/password-reset/" \
   -d '{"email": "test@example.com"}'
 
 # 2. Confirm reset with token from email
-curl -X POST "http://localhost:8001/api/v1/auth/password-reset/confirm/" \\
+curl -X POST "http://localhost:8001/api/v1/auth/password-reset/confirm/" \
   -d '{
     "token": "RESET_TOKEN", 
     "new_password": "NewSecurePass123!"
@@ -579,9 +583,9 @@ curl "http://localhost:8001/api/v1/products/products/?category=1&in_stock=true"
 
 #### 1. Create Product
 ```bash
-curl -X POST "http://localhost:8001/api/v1/products/products/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://localhost:8001/api/v1/products/products/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
   -d '{
     "name": "Premium Wireless Headphones",
     "description": "High-quality wireless headphones with noise cancellation",
@@ -589,8 +593,7 @@ curl -X POST "http://localhost:8001/api/v1/products/products/" \\
     "price": "299.99",
     "compare_price": "399.99",
     "category": 1,
-    "tag_ids": [1, 2, 3],
-    "sku": "WH-001",
+  "tags": [1, 2, 3],
     "stock_quantity": 50,
     "track_inventory": true,
     "is_featured": true,
@@ -600,33 +603,33 @@ curl -X POST "http://localhost:8001/api/v1/products/products/" \\
 
 #### 2. Update Stock
 ```bash
-curl -X POST "http://localhost:8001/api/v1/products/products/1/update_stock/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/products/products/1/update_stock/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{"quantity": 25}'
 ```
 
 #### 3. Bulk Operations
 ```bash
-curl -X POST "http://localhost:8001/api/v1/products/management/bulk_activate/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/products/management/bulk_activate/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{"product_ids": [1, 2, 3]}'
 ```
 
 ### 🏷️ Product Variants Testing
 ```bash
 # Create variant option (e.g., "Size")
-curl -X POST "http://localhost:8001/api/v1/products/variant-options/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/products/variant-options/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{"name": "Size", "display_type": "radio"}'
 
 # Create variant option value (e.g., "Large")
-curl -X POST "http://localhost:8001/api/v1/products/variant-option-values/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/products/variant-option-values/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{"option": 1, "value": "Large", "sort_order": 2}'
 
 # Create product variant
-curl -X POST "http://localhost:8001/api/v1/products/variants/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/products/variants/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{
     "product": 1,
     "option_values": [1, 2],
@@ -656,9 +659,9 @@ curl "http://localhost:8001/api/v1/categories/1/"
 
 #### 3. Create Category (Admin Required)
 ```bash
-curl -X POST "http://localhost:8001/api/v1/categories/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://localhost:8001/api/v1/categories/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
   -d '{
     "name": "Electronics",
     "description": "Electronic devices and accessories",
@@ -670,8 +673,8 @@ curl -X POST "http://localhost:8001/api/v1/categories/" \\
 
 #### 4. Create Subcategory
 ```bash
-curl -X POST "http://localhost:8001/api/v1/categories/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/categories/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{
     "name": "Smartphones",
     "description": "Mobile phones and accessories",
@@ -696,9 +699,9 @@ curl -X POST "http://localhost:8001/api/v1/categories/" \\
 
 #### 1. Create Cart
 ```bash
-curl -X POST "http://localhost:8001/api/v1/payments/carts/" \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://localhost:8001/api/v1/payments/carts/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
   -d '{
     "session_id": "session-123",
     "currency": "ETB"
@@ -707,8 +710,8 @@ curl -X POST "http://localhost:8001/api/v1/payments/carts/" \\
 
 #### 2. Add Items to Cart
 ```bash
-curl -X POST "http://localhost:8001/api/v1/payments/carts/1/items/" \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/payments/carts/1/items/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "product": 1,
     "product_variant": null,
@@ -719,14 +722,14 @@ curl -X POST "http://localhost:8001/api/v1/payments/carts/1/items/" \\
 
 #### 3. Update Cart Item
 ```bash
-curl -X PATCH "http://localhost:8001/api/v1/payments/carts/1/items/1/" \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
+curl -X PATCH "http://localhost:8001/api/v1/payments/carts/1/items/1/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"quantity": 3}'
 ```
 
 #### 4. Get Cart Summary
 ```bash
-curl "http://localhost:8001/api/v1/payments/carts/1/" \\
+curl "http://localhost:8001/api/v1/payments/carts/1/" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -739,8 +742,8 @@ curl "http://localhost:8001/api/v1/payments/providers/"
 
 #### 2. Create Payment Method
 ```bash
-curl -X POST "http://localhost:8001/api/v1/payments/methods/" \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/payments/methods/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "provider": 1,
     "method_type": "mobile_money",
@@ -750,8 +753,8 @@ curl -X POST "http://localhost:8001/api/v1/payments/methods/" \\
 
 #### 3. Initiate Transaction
 ```bash
-curl -X POST "http://localhost:8001/api/v1/payments/transactions/" \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/payments/transactions/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "cart": 1,
     "payment_method": 1,
@@ -763,8 +766,8 @@ curl -X POST "http://localhost:8001/api/v1/payments/transactions/" \\
 ### 🔔 Webhook Testing
 ```bash
 # Test Chapa webhook (simulate from Chapa)
-curl -X POST "http://localhost:8001/api/v1/payments/webhooks/chapa/" \\
-  -H "Content-Type: application/json" \\
+curl -X POST "http://localhost:8001/api/v1/payments/webhooks/chapa/" \
+  -H "Content-Type: application/json" \
   -d '{
     "status": "success",
     "tx_ref": "tx-12345",
@@ -789,21 +792,21 @@ curl -X POST "http://localhost:8001/api/v1/payments/webhooks/chapa/" \\
 
 #### 1. List All Users
 ```bash
-curl "http://localhost:8001/api/v1/auth/admin/users/" \\
+curl "http://localhost:8001/api/v1/auth/admin/users/" \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 
 #### 2. User Details & Activity
 ```bash
-curl "http://localhost:8001/api/v1/auth/admin/users/USER_ID/" \\
+curl "http://localhost:8001/api/v1/auth/admin/users/USER_ID/" \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 
 #### 3. Bulk User Operations
 ```bash
 # Bulk activate users
-curl -X POST "http://localhost:8001/api/v1/auth/admin/users/bulk_action/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/auth/admin/users/bulk_action/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{
     "action": "activate",
     "user_ids": [1, 2, 3],
@@ -811,8 +814,8 @@ curl -X POST "http://localhost:8001/api/v1/auth/admin/users/bulk_action/" \\
   }'
 
 # Bulk deactivate users
-curl -X POST "http://localhost:8001/api/v1/auth/admin/users/bulk_action/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/auth/admin/users/bulk_action/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{
     "action": "deactivate", 
     "user_ids": [4, 5],
@@ -825,13 +828,13 @@ curl -X POST "http://localhost:8001/api/v1/auth/admin/users/bulk_action/" \\
 #### 1. Advanced Product Operations
 ```bash
 # Bulk product activation
-curl -X POST "http://localhost:8001/api/v1/products/management/bulk_activate/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/products/management/bulk_activate/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{"product_ids": [1, 2, 3, 4, 5]}'
 
 # Bulk stock update
-curl -X POST "http://localhost:8001/api/v1/products/management/bulk_stock_update/" \\
-  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/products/management/bulk_stock_update/" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{
     "updates": [
       {"product_id": 1, "quantity": 100},
@@ -843,11 +846,11 @@ curl -X POST "http://localhost:8001/api/v1/products/management/bulk_stock_update
 ### 📊 Analytics & Reporting
 ```bash
 # User activity analytics
-curl "http://localhost:8001/api/v1/auth/admin/users/USER_ID/activity/" \\
+curl "http://localhost:8001/api/v1/auth/admin/users/USER_ID/activity/" \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 
 # Product performance metrics
-curl "http://localhost:8001/api/v1/products/management/analytics/" \\
+curl "http://localhost:8001/api/v1/products/management/analytics/" \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 """
@@ -860,7 +863,7 @@ curl "http://localhost:8001/api/v1/products/management/analytics/" \\
 ### Phase 1: Customer Registration & Setup
 ```bash
 # 1. Register new customer
-curl -X POST "http://localhost:8001/api/v1/auth/register/" \\
+curl -X POST "http://localhost:8001/api/v1/auth/register/" \
   -d '{
     "email": "customer@example.com",
     "username": "customer1",
@@ -870,11 +873,11 @@ curl -X POST "http://localhost:8001/api/v1/auth/register/" \\
   }'
 
 # 2. Verify email (use token from email)
-curl -X POST "http://localhost:8001/api/v1/auth/verify-email/" \\
+curl -X POST "http://localhost:8001/api/v1/auth/verify-email/" \
   -d '{"token": "VERIFICATION_TOKEN"}'
 
 # 3. Login and get tokens
-curl -X POST "http://localhost:8001/api/v1/auth/token/" \\
+curl -X POST "http://localhost:8001/api/v1/auth/token/" \
   -d '{
     "email": "customer@example.com",
     "password": "SecurePass123!"
@@ -899,13 +902,13 @@ curl "http://localhost:8001/api/v1/products/products/featured/"
 ### Phase 3: Shopping Cart
 ```bash
 # 8. Create cart
-curl -X POST "http://localhost:8001/api/v1/payments/carts/" \\
-  -H "Authorization: Bearer TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/payments/carts/" \
+  -H "Authorization: Bearer TOKEN" \
   -d '{"currency": "ETB"}'
 
 # 9. Add products to cart
-curl -X POST "http://localhost:8001/api/v1/payments/carts/1/items/" \\
-  -H "Authorization: Bearer TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/payments/carts/1/items/" \
+  -H "Authorization: Bearer TOKEN" \
   -d '{
     "product": 1,
     "quantity": 2,
@@ -913,16 +916,16 @@ curl -X POST "http://localhost:8001/api/v1/payments/carts/1/items/" \\
   }'
 
 # 10. Update cart item
-curl -X PATCH "http://localhost:8001/api/v1/payments/carts/1/items/1/" \\
-  -H "Authorization: Bearer TOKEN" \\
+curl -X PATCH "http://localhost:8001/api/v1/payments/carts/1/items/1/" \
+  -H "Authorization: Bearer TOKEN" \
   -d '{"quantity": 1}'
 ```
 
 ### Phase 4: Checkout & Payment
 ```bash
 # 11. Setup payment method
-curl -X POST "http://localhost:8001/api/v1/payments/methods/" \\
-  -H "Authorization: Bearer TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/payments/methods/" \
+  -H "Authorization: Bearer TOKEN" \
   -d '{
     "provider": 1,
     "method_type": "mobile_money",
@@ -930,8 +933,8 @@ curl -X POST "http://localhost:8001/api/v1/payments/methods/" \\
   }'
 
 # 12. Initiate transaction
-curl -X POST "http://localhost:8001/api/v1/payments/transactions/" \\
-  -H "Authorization: Bearer TOKEN" \\
+curl -X POST "http://localhost:8001/api/v1/payments/transactions/" \
+  -H "Authorization: Bearer TOKEN" \
   -d '{
     "cart": 1,
     "payment_method": 1,
@@ -940,7 +943,7 @@ curl -X POST "http://localhost:8001/api/v1/payments/transactions/" \\
   }'
 
 # 13. Verify payment status
-curl "http://localhost:8001/api/v1/payments/transactions/1/" \\
+curl "http://localhost:8001/api/v1/payments/transactions/1/" \
   -H "Authorization: Bearer TOKEN"
 ```
 

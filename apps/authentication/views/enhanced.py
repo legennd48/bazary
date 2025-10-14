@@ -417,11 +417,17 @@ class ResendVerificationView(APIView):
                     {"error": message}, status=status.HTTP_429_TOO_MANY_REQUESTS
                 )
 
-            # Create and send verification token
+            # Create token and enqueue email send
             token = create_email_verification_token(user)
-            email_sent = send_verification_email(user, token)
+            from django.db import transaction
+            from ..tasks import send_verification_email_task
 
-            if email_sent:
+            def _enqueue():
+                send_verification_email_task.delay(str(user.id), token.id)
+
+            transaction.on_commit(_enqueue)
+
+            if True:
                 log_user_activity(
                     user=user,
                     action="email_verification",
@@ -435,11 +441,6 @@ class ResendVerificationView(APIView):
                         "email": user.email,
                     },
                     status=status.HTTP_200_OK,
-                )
-            else:
-                return Response(
-                    {"error": "Failed to send verification email"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -581,17 +582,22 @@ class PasswordResetRequestView(APIView):
             try:
                 user = User.objects.get(email=email, is_active=True)
 
-                # Create and send reset token
+                # Create token and enqueue reset email
                 token = create_password_reset_token(user, request)
-                email_sent = send_password_reset_email(user, token)
+                from django.db import transaction
+                from ..tasks import send_password_reset_email_task
 
-                if email_sent:
-                    log_user_activity(
-                        user=user,
-                        action="password_reset",
-                        description="Password reset requested",
-                        request=request,
-                    )
+                def _enqueue():
+                    send_password_reset_email_task.delay(str(user.id), token.id)
+
+                transaction.on_commit(_enqueue)
+
+                log_user_activity(
+                    user=user,
+                    action="password_reset",
+                    description="Password reset requested",
+                    request=request,
+                )
 
             except User.DoesNotExist:
                 # Log potential security issue but don't reveal it

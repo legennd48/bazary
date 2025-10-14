@@ -15,6 +15,8 @@ from .models import (
     UserProfile,
 )
 
+# Import the account deletion serializer
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model."""
@@ -70,11 +72,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
 
-        # Send verification email after registration
-        from .utils import create_email_verification_token, send_verification_email
+        # Send verification email after registration (async)
+        from django.db import transaction
+        from .utils import create_email_verification_token
+        from .tasks import send_verification_email_task
 
         token = create_email_verification_token(user)
-        send_verification_email(user, token)
+
+        def _enqueue():
+            send_verification_email_task.delay(str(user.id), token.id)
+
+        transaction.on_commit(_enqueue)
 
         return user
 
@@ -399,4 +407,33 @@ class BulkUserActionSerializer(serializers.Serializer):
         existing_users = User.objects.filter(id__in=value)
         if len(existing_users) != len(value):
             raise serializers.ValidationError("Some user IDs do not exist.")
+        return value
+
+
+class AccountDeletionSerializer(serializers.Serializer):
+    """
+    Serializer for user self-deletion with password confirmation.
+    """
+    password = serializers.CharField(
+        write_only=True,
+        help_text="Current password confirmation required for account deletion"
+    )
+    confirmation_text = serializers.CharField(
+        write_only=True,
+        help_text="Type 'DELETE MY ACCOUNT' to confirm deletion"
+    )
+
+    def validate_password(self, value):
+        """Validate the provided password."""
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Incorrect password.")
+        return value
+
+    def validate_confirmation_text(self, value):
+        """Validate the confirmation text."""
+        if value != "DELETE MY ACCOUNT":
+            raise serializers.ValidationError(
+                "Please type 'DELETE MY ACCOUNT' to confirm account deletion."
+            )
         return value

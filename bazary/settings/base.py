@@ -546,3 +546,14 @@ USER_PASSWORD_RESET_TIMEOUT = config(
 USER_EMAIL_VERIFICATION_TIMEOUT = config(
     "USER_EMAIL_VERIFICATION_TIMEOUT", default=86400, cast=int  # 24 hours
 )
+
+# Celery configuration (can be overridden per environment)
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/1")
+CELERY_RESULT_BACKEND = config(
+    "CELERY_RESULT_BACKEND", default="redis://localhost:6379/1"
+)
+CELERY_TASK_ALWAYS_EAGER = config("CELERY_TASK_ALWAYS_EAGER", default=False, cast=bool)
+CELERY_TASK_TIME_LIMIT = config("CELERY_TASK_TIME_LIMIT", default=300, cast=int)
+CELERY_TASK_SOFT_TIME_LIMIT = config(
+    "CELERY_TASK_SOFT_TIME_LIMIT", default=240, cast=int
+)

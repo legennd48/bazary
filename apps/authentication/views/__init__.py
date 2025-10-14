@@ -4,6 +4,9 @@ Enhanced authentication views package.
 
 from .admin import AdminUserManagementViewSet
 
+# Import account deletion view
+from .account_deletion import AccountDeletionView
+
 # Import enhanced views
 from .enhanced import (
     EmailVerificationView,
@@ -44,4 +47,6 @@ __all__ = [
     "EnhancedProfileView",
     "UserAddressViewSet",
     "UserActivityView",
+    # Account deletion
+    "AccountDeletionView",
 ]

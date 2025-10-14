@@ -8,6 +8,7 @@ from rest_framework.routers import DefaultRouter
 
 # Import from views package
 from .views import (
+    AccountDeletionView,
     AdminUserManagementViewSet,
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
@@ -40,6 +41,8 @@ urlpatterns = [
     # Enhanced profile management
     path("profile/enhanced/", EnhancedProfileView.as_view(), name="enhanced_profile"),
     path("activity/", UserActivityView.as_view(), name="user_activity"),
+    # Account deletion
+    path("delete-account/", AccountDeletionView.as_view(), name="delete_account"),
     # Email verification
     path("verify-email/", EmailVerificationView.as_view(), name="verify_email"),
     path(

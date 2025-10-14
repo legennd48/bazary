@@ -284,11 +284,18 @@ def bulk_user_action(
             elif action == "send_verification":
                 if not user.is_email_verified:
                     token = create_email_verification_token(user)
-                    send_verification_email(user, token)
+                    # enqueue async email send
+                    from django.db import transaction
+                    from .tasks import send_verification_email_task
+
+                    def _enqueue():
+                        send_verification_email_task.delay(str(user.id), token.id)
+
+                    transaction.on_commit(_enqueue)
                     log_user_activity(
                         user=user,
                         action="email_verification",
-                        description=f"Verification email sent by admin {admin_user.email}",
+                        description=f"Verification email enqueued by admin {admin_user.email}",
                     )
 
             success_count += 1

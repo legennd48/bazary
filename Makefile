@@ -17,6 +17,11 @@ help:
 	@echo "  createsuperuser  Create Django superuser"
 	@echo "  check            Run Django system checks"
 	@echo "  security         Run security checks"
+	@echo "  celery-worker    Run Celery worker (local)"
+	@echo "  celery-beat      Run Celery beat scheduler"
+	@echo "  celery-logs      Tail Celery worker logs (docker)"
+	@echo "  check-celery     Check Celery worker status"
+	@echo "  dev              Run Django + Celery together (recommended)"
 
 # Development setup
 install:
@@ -85,6 +90,15 @@ docker-down:
 docker-logs:
 	docker-compose logs -f web
 
+celery-worker:
+	celery -A bazary worker -l info
+
+celery-beat:
+	celery -A bazary beat -l info
+
+celery-logs:
+	docker-compose logs -f worker
+
 docker-shell:
 	docker-compose exec web python manage.py shell
 
@@ -94,6 +108,15 @@ docker-test:
 # Development server
 runserver:
 	python manage.py runserver
+
+# Run development server with Celery worker
+dev:
+	@echo "🚀 Starting Django + Celery development environment..."
+	@./scripts/dev_server.sh
+
+# Check Celery status
+check-celery:
+	python manage.py check_celery
 
 # Clean up
 clean:

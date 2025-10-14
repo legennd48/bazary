@@ -50,6 +50,9 @@ services:
       - DJANGO_SETTINGS_MODULE=bazary.settings.development
       - DATABASE_URL=postgres://bazary_user:bazary_dev_password@db:5432/bazary_dev
       - REDIS_URL=redis://redis:6379/1
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - CELERY_TASK_ALWAYS_EAGER=False
       - DEBUG=True
       # Optional: Override Chapa keys here
       # - CHAPA_PUBLIC_KEY=CHASECK_TEST-your-key
@@ -66,6 +69,33 @@ services:
              python manage.py setup_payment_providers --provider chapa || true &&
              python manage.py seed_database &&
              python manage.py runserver 0.0.0.0:8000"
+
+  # Celery worker for background tasks
+  worker:
+    build:
+      context: .
+      target: development
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    env_file:
+      - .env.development
+    environment:
+      - DJANGO_SETTINGS_MODULE=bazary.settings.development
+      - DATABASE_URL=postgres://bazary_user:bazary_dev_password@db:5432/bazary_dev
+      - REDIS_URL=redis://redis:6379/1
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - CELERY_TASK_ALWAYS_EAGER=False
+      - DEBUG=True
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A bazary worker -l info
 
   # Nginx (for production-like setup)
   nginx:

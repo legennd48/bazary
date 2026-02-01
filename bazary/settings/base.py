@@ -2,6 +2,7 @@
 Base Django settings for bazary project.
 
 This file contains settings common to all environments.
+Capability-based app loading enables per-client customization.
 """
 
 import os
@@ -16,22 +17,52 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Add apps directory to Python path
 sys.path.insert(0, os.path.join(BASE_DIR, "apps"))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config(
-    "DJANGO_SECRET_KEY", default="django-insecure-change-me-in-production"
-)
+# =============================================================================
+# SECURITY CONFIGURATION (Production-first)
+# =============================================================================
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# CRITICAL: No default secret key - must be provided via environment
+SECRET_KEY = config("DJANGO_SECRET_KEY")
+
+# Debug mode - explicitly False by default
 DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
 
-# Allowed hosts
+# Allowed hosts - no wildcards in production
 ALLOWED_HOSTS = config(
     "DJANGO_ALLOWED_HOSTS",
     default="localhost,127.0.0.1",
     cast=lambda v: [h.strip() for h in v.split(",")],
 )
 
-# Application definition
+# =============================================================================
+# CAPABILITY CONFIGURATION
+# =============================================================================
+# Capabilities control which features are enabled per deployment.
+# Set ENABLED_CAPABILITIES env var (comma-separated):
+#   - products: Physical/digital products, variants, categories, tags
+#   - services: Service offerings with provider assignment
+#   - bookings: Time-based reservations and availability
+#   - orders: Order management and checkout (required for payments)
+#   - payments: Payment processing and transactions
+#   - notifications: Real-time WebSocket + email notifications
+#
+# Example: ENABLED_CAPABILITIES=products,orders,payments,notifications
+
+from .capabilities import configure_capabilities
+
+THIRD_PARTY_APPS, LOCAL_APPS, CAPABILITY_MIDDLEWARE = configure_capabilities()
+
+# Store enabled capabilities for runtime checks
+ENABLED_CAPABILITIES = config(
+    "ENABLED_CAPABILITIES",
+    default="products,orders,payments",
+    cast=lambda v: [cap.strip().lower() for cap in v.split(",") if cap.strip()],
+)
+
+# =============================================================================
+# APPLICATION DEFINITION
+# =============================================================================
+
 DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,41 +72,9 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRD_PARTY_APPS = [
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "corsheaders",
-    "django_filters",
-    "drf_yasg",
-    "drf_spectacular",
-    # 'django_ratelimit',  # TODO: Enable once Redis is configured
-]
-
-LOCAL_APPS = [
-    "apps.core",
-    "apps.authentication",
-    "apps.categories",
-    "apps.products",
-    "apps.payments",
-]
-
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
-MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
-    "apps.core.middleware.SecurityHeadersMiddleware",
-    "apps.core.middleware.RequestSanitizationMiddleware",
-    "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "apps.core.middleware.APISecurityLoggingMiddleware",
-    "apps.core.middleware.IPWhitelistMiddleware",
-]
+MIDDLEWARE = CAPABILITY_MIDDLEWARE
 
 ROOT_URLCONF = "bazary.urls"
 
@@ -557,3 +556,30 @@ CELERY_TASK_TIME_LIMIT = config("CELERY_TASK_TIME_LIMIT", default=300, cast=int)
 CELERY_TASK_SOFT_TIME_LIMIT = config(
     "CELERY_TASK_SOFT_TIME_LIMIT", default=240, cast=int
 )
+
+# =============================================================================
+# DJANGO CHANNELS CONFIGURATION (WebSocket support)
+# =============================================================================
+
+# ASGI application (WebSocket + HTTP)
+ASGI_APPLICATION = "bazary.asgi.application"
+
+# Channel layer configuration (Redis backend for production)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [config("REDIS_URL", default="redis://localhost:6379/2")],
+            "capacity": 1500,
+            "expiry": 10,
+        },
+    },
+}
+
+# In-memory channel layer fallback for testing/development without Redis
+if config("USE_IN_MEMORY_CHANNEL_LAYER", default=False, cast=bool):
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }

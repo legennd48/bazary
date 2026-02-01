@@ -2,18 +2,21 @@
 Development settings for bazary project.
 """
 
-from .base import *
+import os
+
+# Set required environment variables before importing base
+os.environ.setdefault("DJANGO_SECRET_KEY", "dev-secret-key-change-in-production")
+os.environ.setdefault("ENABLED_CAPABILITIES", "products,services,bookings,orders,payments,notifications")
+
+from decouple import config
+
+from .base import *  # noqa: E402, F403
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 # Use ALLOWED_HOSTS from base.py (which reads from environment variable)
 # Don't override it here so environment variables work properly
-
-# Database for development - use PostgreSQL in Docker or SQLite locally
-import os
-
-from decouple import config
 
 if config("DATABASE_URL", default=None):
     # Use PostgreSQL when DATABASE_URL is provided (Docker environment)

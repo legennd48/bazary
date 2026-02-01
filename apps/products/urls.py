@@ -15,6 +15,8 @@ from .views import (
     VariantOptionViewSet,
 )
 
+app_name = "products"
+
 # Create router and register all viewsets
 router = DefaultRouter()
 

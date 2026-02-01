@@ -2,7 +2,13 @@
 Testing settings for bazary project.
 """
 
-from .base import *
+import os
+
+# Set required environment variables before importing base
+os.environ.setdefault("DJANGO_SECRET_KEY", "test-secret-key-only-for-testing")
+os.environ.setdefault("ENABLED_CAPABILITIES", "products,orders,payments")
+
+from .base import *  # noqa: E402, F403
 
 # Use in-memory database for faster tests
 DATABASES = {
@@ -44,9 +50,6 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # Media files
 MEDIA_ROOT = "/tmp/bazary_test_media"
-
-# Secret key for testing
-SECRET_KEY = "test-secret-key-only-for-testing"
 
 # Debug
 DEBUG = False

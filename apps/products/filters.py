@@ -29,9 +29,8 @@ class ProductFilter(django_filters.FilterSet):
         queryset=Category.objects.all(), help_text="Filter by category"
     )
     category_slug = django_filters.CharFilter(
-        field_name="category__slug",
-        lookup_expr="exact",
-        help_text="Filter by category slug",
+        method="filter_by_category_slug",
+        help_text="Filter by category slug (includes subcategories)",
     )
 
     # Tag filters
@@ -116,6 +115,29 @@ class ProductFilter(django_filters.FilterSet):
         if tag_names:
             return queryset.filter(tags__name__in=tag_names).distinct()
         return queryset
+
+    def filter_by_category_slug(self, queryset, name, value):
+        """
+        Filter by category slug, including products in subcategories.
+        """
+        if not value:
+            return queryset
+
+        try:
+            # Get the category by slug
+            category = Category.objects.get(slug=value)
+            
+            # Get all subcategories (children) of this category
+            subcategories = Category.objects.filter(parent=category)
+            
+            # Filter products that are in this category OR any of its subcategories
+            return queryset.filter(
+                Q(category=category) | Q(category__in=subcategories)
+            ).distinct()
+            
+        except Category.DoesNotExist:
+            # If category doesn't exist, return empty queryset
+            return queryset.none()
 
     def filter_search(self, queryset, name, value):
         """

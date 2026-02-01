@@ -5,7 +5,11 @@ This configuration is specifically for GitHub Actions CI/CD pipeline.
 
 import os
 
-from .base import *
+# Set required environment variables before importing base
+os.environ.setdefault("DJANGO_SECRET_KEY", "ci-test-secret-key-only-for-testing")
+os.environ.setdefault("ENABLED_CAPABILITIES", "products,orders,payments")
+
+from .base import *  # noqa: E402, F403
 
 # Use PostgreSQL database for CI tests (matches production better)
 DATABASES = {

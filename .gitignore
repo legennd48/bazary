@@ -300,6 +300,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Frontend (Next.js)
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+*.tsbuildinfo
+.vercel
+
 # Production settings
 .env.prod
 
@@ -315,4 +327,16 @@ local_settings.py
 # Temporary files
 tmp/
 temp/
-V1_ASSESSMENT_REPORT.md
+
+# Development/debug scripts at root level
+check_*.py
+test_*.py
+
+# API schema exports
+api-schema.json
+
+# Security scan reports  
+bandit-report.json
+
+# MVP/planning documentation (obsolete)
+MVP documentation/

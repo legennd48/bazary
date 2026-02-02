@@ -24,6 +24,9 @@ def get_capability_urls() -> List[Tuple[str, str, str]]:
     # Core auth is always available
     urls.append(("auth/", "apps.authentication.urls", "authentication"))
     
+    # Vendors (multi-vendor marketplace) - always available
+    urls.append(("vendors/", "apps.authentication.urls_vendor", "vendors"))
+    
     # Analytics (admin only) - always available
     urls.append(("analytics/", "apps.core.urls.analytics", "analytics"))
     

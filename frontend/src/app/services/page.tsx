@@ -27,7 +27,7 @@ function ServicesContent() {
   const [selectedCategory, setSelectedCategory] = useState(
     searchParams.get('category') || 'all'
   );
-  const [sortBy, setSortBy] = useState('');
+  const [sortBy, setSortBy] = useState('default');
 
   const { data: servicesData, isLoading } = useQuery({
     queryKey: ['services', searchQuery, selectedCategory, sortBy],
@@ -107,6 +107,7 @@ function ServicesContent() {
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="default">Sort by</SelectItem>
             <SelectItem value="name">Name A-Z</SelectItem>
             <SelectItem value="-name">Name Z-A</SelectItem>
             <SelectItem value="base_price">Price: Low to High</SelectItem>

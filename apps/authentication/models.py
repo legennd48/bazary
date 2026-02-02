@@ -51,6 +51,7 @@ class User(AbstractUser):
 
     USER_ROLES = [
         ("customer", "Customer"),
+        ("vendor", "Vendor"),
         ("staff", "Staff"),
         ("admin", "Admin"),
         ("super_admin", "Super Admin"),
@@ -169,13 +170,19 @@ class User(AbstractUser):
         """Check if user has specific role or higher."""
         role_hierarchy = {
             "customer": 1,
-            "staff": 2,
-            "admin": 3,
-            "super_admin": 4,
+            "vendor": 2,
+            "staff": 3,
+            "admin": 4,
+            "super_admin": 5,
         }
         user_level = role_hierarchy.get(self.role, 0)
         required_level = role_hierarchy.get(role, 0)
         return user_level >= required_level
+
+    @property
+    def is_vendor(self):
+        """Check if user is a vendor."""
+        return hasattr(self, 'vendor_profile')
 
 
 class UserProfile(models.Model):
@@ -521,3 +528,257 @@ def create_user_profile(sender, instance, created, **kwargs):
     """Create user profile when user is created."""
     if created:
         UserProfile.objects.create(user=instance)
+
+
+# ============================================================================
+# Vendor Models for Multi-Vendor Marketplace
+# ============================================================================
+
+
+class Vendor(models.Model):
+    """
+    Vendor/Seller model for multi-vendor marketplace.
+    A vendor is a user who can sell products and/or offer services.
+    """
+
+    VERIFICATION_STATUS = [
+        ('pending', 'Pending Review'),
+        ('documents_required', 'Documents Required'),
+        ('under_review', 'Under Review'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected'),
+        ('suspended', 'Suspended'),
+    ]
+
+    VENDOR_TYPE = [
+        ('individual', 'Individual Seller'),
+        ('business', 'Business'),
+        ('service_provider', 'Service Provider'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='vendor_profile'
+    )
+
+    # Store/Business Information
+    store_name = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    store_description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to='vendors/logos/', null=True, blank=True)
+    banner = models.ImageField(upload_to='vendors/banners/', null=True, blank=True)
+
+    # Business Details
+    vendor_type = models.CharField(max_length=20, choices=VENDOR_TYPE, default='individual')
+    business_name = models.CharField(max_length=255, blank=True, help_text="Legal business name")
+    business_registration_number = models.CharField(max_length=100, blank=True)
+    tax_id = models.CharField(max_length=100, blank=True, help_text="Tax identification number")
+
+    # Contact Information
+    business_email = models.EmailField(blank=True)
+    business_phone = models.CharField(max_length=20, blank=True)
+    website = models.URLField(blank=True)
+
+    # Address
+    address_line1 = models.CharField(max_length=255, blank=True)
+    address_line2 = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state_province = models.CharField(max_length=100, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    country = models.CharField(max_length=100, default='Ethiopia')
+
+    # Verification
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VERIFICATION_STATUS,
+        default='pending'
+    )
+    verification_notes = models.TextField(blank=True, help_text="Admin notes on verification")
+    verified_at = models.DateTimeField(null=True, blank=True)
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_vendors'
+    )
+
+    # Commission and Payments
+    commission_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=10.00,
+        help_text="Platform commission percentage"
+    )
+    payout_method = models.CharField(max_length=50, blank=True)
+    payout_details = models.JSONField(default=dict, blank=True)
+
+    # Settings
+    is_active = models.BooleanField(default=False, help_text="Can the vendor sell?")
+    is_featured = models.BooleanField(default=False)
+    accepts_returns = models.BooleanField(default=True)
+    return_policy = models.TextField(blank=True)
+    shipping_policy = models.TextField(blank=True)
+
+    # Statistics (denormalized for performance)
+    total_products = models.PositiveIntegerField(default=0)
+    total_orders = models.PositiveIntegerField(default=0)
+    total_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    total_reviews = models.PositiveIntegerField(default=0)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'vendors'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['verification_status']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['slug']),
+        ]
+
+    def __str__(self):
+        return self.store_name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.store_name)
+            # Ensure unique slug
+            original_slug = self.slug
+            counter = 1
+            while Vendor.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+        super().save(*args, **kwargs)
+
+    @property
+    def is_verified(self):
+        return self.verification_status == 'verified'
+
+    @property
+    def can_sell(self):
+        return self.is_active and self.is_verified
+
+
+class VendorDocument(models.Model):
+    """
+    Documents uploaded by vendors for verification.
+    """
+
+    DOCUMENT_TYPES = [
+        ('id_front', 'ID Card (Front)'),
+        ('id_back', 'ID Card (Back)'),
+        ('business_license', 'Business License'),
+        ('tax_certificate', 'Tax Certificate'),
+        ('bank_statement', 'Bank Statement'),
+        ('other', 'Other Document'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    vendor = models.ForeignKey(
+        Vendor,
+        on_delete=models.CASCADE,
+        related_name='documents'
+    )
+    document_type = models.CharField(max_length=30, choices=DOCUMENT_TYPES)
+    file = models.FileField(upload_to='vendors/documents/')
+    description = models.CharField(max_length=255, blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    review_notes = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_documents'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'vendor_documents'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.vendor.store_name} - {self.get_document_type_display()}"
+
+
+class VendorApplication(models.Model):
+    """
+    Track vendor application process.
+    """
+
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('submitted', 'Submitted'),
+        ('under_review', 'Under Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='vendor_applications'
+    )
+
+    # Application Data
+    store_name = models.CharField(max_length=255)
+    vendor_type = models.CharField(max_length=20, choices=Vendor.VENDOR_TYPE)
+    business_description = models.TextField()
+    product_categories = models.JSONField(default=list, help_text="Categories vendor plans to sell in")
+    expected_monthly_sales = models.CharField(max_length=50, blank=True)
+
+    # Contact
+    contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=20)
+
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    rejection_reason = models.TextField(blank=True)
+
+    # Admin handling
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_applications'
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    # Resulting vendor profile
+    vendor = models.OneToOneField(
+        Vendor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='application'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'vendor_applications'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.store_name} - {self.get_status_display()}"
+

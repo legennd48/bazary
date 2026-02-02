@@ -12,6 +12,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from .base import BasePaymentService
 from .chapa import ChapaPaymentService
+from .stripe_service import StripePaymentService
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,8 @@ class PaymentServiceFactory:
     # Registry of available payment services
     SERVICES = {
         "chapa": ChapaPaymentService,
+        "stripe": StripePaymentService,
         # Add other providers here as they are implemented
-        # "stripe": StripePaymentService,
         # "paypal": PayPalPaymentService,
     }
 

@@ -24,10 +24,14 @@ def get_capability_urls() -> List[Tuple[str, str, str]]:
     # Core auth is always available
     urls.append(("auth/", "apps.authentication.urls", "authentication"))
     
+    # Analytics (admin only) - always available
+    urls.append(("analytics/", "apps.core.urls.analytics", "analytics"))
+    
     # Products capability
     if "products" in enabled:
         urls.append(("categories/", "apps.categories.urls", "categories"))
         urls.append(("products/", "apps.products.urls", "products"))
+        urls.append(("wishlists/", "apps.products.urls_wishlist", "wishlists"))
     
     # Services capability
     if "services" in enabled:
@@ -61,7 +65,10 @@ def build_api_v1_patterns() -> List[URLPattern | URLResolver]:
     for path_prefix, module_path, namespace in get_capability_urls():
         try:
             patterns.append(
-                path(path_prefix, include(module_path, namespace=namespace))
+                # When specifying a namespace, Django requires an app_name.
+                # Provide it via the 2-tuple form to avoid requiring every
+                # included urls.py to define `app_name`.
+                path(path_prefix, include((module_path, namespace), namespace=namespace))
             )
         except ImportError:
             # Module doesn't exist yet - skip
@@ -81,7 +88,12 @@ def build_api_v2_patterns() -> List[URLPattern | URLResolver]:
     patterns = []
     
     # Platform info endpoint (always available)
-    patterns.append(path("platform/", include("apps.core.urls_v2", namespace="platform")))
+    patterns.append(
+        path(
+            "platform/",
+            include(("apps.core.urls_v2", "platform"), namespace="platform"),
+        )
+    )
     
     # Add v2 endpoints for enabled capabilities
     # These will be added as v2 modules are created

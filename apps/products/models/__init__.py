@@ -10,6 +10,7 @@ from .variants import (
     VariantOption,
     VariantOptionValue,
 )
+from .wishlist import Wishlist, WishlistItem
 
 __all__ = [
     "Product",
@@ -20,4 +21,6 @@ __all__ = [
     "ProductVariantOption",
     "VariantOption",
     "VariantOptionValue",
+    "Wishlist",
+    "WishlistItem",
 ]

@@ -25,7 +25,7 @@ function ServicesContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get('category') || ''
+    searchParams.get('category') || 'all'
   );
   const [sortBy, setSortBy] = useState('');
 
@@ -34,7 +34,7 @@ function ServicesContent() {
     queryFn: () =>
       servicesApi.getServices({
         search: searchQuery || undefined,
-        category: selectedCategory || undefined,
+        category: selectedCategory === 'all' ? undefined : selectedCategory,
       }),
   });
 
@@ -93,7 +93,7 @@ function ServicesContent() {
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}

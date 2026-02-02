@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
@@ -25,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { bookingsApi } from '@/lib/api';
+import { useAuthStore } from '@/lib/store';
 import type { Booking, BookingStatus } from '@/lib/types';
 
 const statusConfig: Record<
@@ -39,9 +42,19 @@ const statusConfig: Record<
 };
 
 export default function BookingsPage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push('/login?redirect=/bookings');
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
+
   const { data: bookingsData, isLoading } = useQuery({
     queryKey: ['bookings'],
     queryFn: () => bookingsApi.getBookings(),
+    enabled: isAuthenticated,
   });
 
   const bookings: Booking[] = bookingsData?.data?.results || [];
@@ -53,7 +66,7 @@ export default function BookingsPage() {
     (b) => !['pending', 'confirmed'].includes(b.status) || new Date(b.start_time) < new Date()
   );
 
-  if (isLoading) {
+  if (isAuthLoading || isLoading) {
     return (
       <div className="container py-8">
         <div className="mb-8">

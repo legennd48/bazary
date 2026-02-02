@@ -22,3 +22,6 @@ redis>=5.0.0
 # WebSocket support (Django Channels)
 channels>=4.0.0
 channels-redis>=4.1.0
+
+# stripe integration
+stripe>=7.0.0
